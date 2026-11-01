@@ -22,6 +22,7 @@ import { AuthService } from '../../services/auth.service';
       } @else {
         <div class="admin-title"><div><span class="eyebrow">אזור ניהול</span><h1>העסקים שלי</h1><p>מכאן יוצרים עמודים חדשים ומנהלים את כל לקוחות סמן.</p></div><button class="button" (click)="newBusiness()">+ הוספת עסק חדש</button></div>
         @if (!cloudMode) { <div class="notice warning">המערכת עדיין במצב מקומי. הנתונים נשמרים בדפדפן הזה בלבד. כדי להעביר אותם לענן, הגדירי Supabase לפי קובץ SETUP-CLOUD.md.</div> }
+        @if (cloudMode && localCount > 0) { <div class="notice">נמצאו {{localCount}} עסקים שנשמרו בעבר בדפדפן הזה. <button class="button outline small" (click)="migrateLocal()" [disabled]="busy">ייבוא הנתונים לענן</button></div> }
         @if (error) { <div class="notice warning">{{error}}</div> }
         @if (loading) { <p>טוענת עסקים…</p> } @else if (!businesses.length) { <div class="empty-state">עדיין אין עסקים. לחצי על „הוספת עסק חדש” כדי ליצור את העמוד הראשון.</div> }
         <div class="admin-list">
@@ -70,10 +71,16 @@ export class AdminComponent {
   loading = false;
   busy = false;
   error = '';
-  cloudMode = this.service.isCloudMode();
-  loggedIn = this.auth.isLoggedIn();
+  cloudMode = false;
+  loggedIn = false;
+  localCount = 0;
 
-  constructor(private service: BusinessService, private auth: AuthService) { if (!this.cloudMode || this.loggedIn) void this.refresh(); }
+  constructor(private service: BusinessService, private auth: AuthService) {
+    this.cloudMode = this.service.isCloudMode();
+    this.loggedIn = this.auth.isLoggedIn();
+    this.localCount = this.service.getLocalCount();
+    if (!this.cloudMode || this.loggedIn) void this.refresh();
+  }
 
   async refresh(): Promise<void> {
     this.loading = true; this.error = '';
@@ -115,6 +122,14 @@ export class AdminComponent {
   }
 
   logout(): void { this.auth.signOut(); this.loggedIn = false; this.businesses = []; this.editing = null; }
+
+  async migrateLocal(): Promise<void> {
+    if (!confirm(`לייבא לענן ${this.localCount} עסקים שנשמרו בדפדפן הזה?`)) return;
+    this.busy = true; this.error = '';
+    try { await this.service.migrateLocalToCloud(); this.localCount = 0; await this.refresh(); alert('הנתונים הועברו לענן בהצלחה.'); }
+    catch (e) { this.error = this.message(e); }
+    finally { this.busy = false; }
+  }
 
   async uploadImage(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];

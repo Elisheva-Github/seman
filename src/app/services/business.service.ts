@@ -48,6 +48,21 @@ export class BusinessService {
     await this.request(url, { method, body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } });
   }
 
+  getLocalCount(): number {
+    try { return (JSON.parse(localStorage.getItem(this.storageKey) || '[]') as Business[]).length; }
+    catch { return 0; }
+  }
+
+  async migrateLocalToCloud(): Promise<number> {
+    if (!this.configured) throw new Error('יש להגדיר תחילה את Supabase.');
+    const local = this.getLocal();
+    if (!local.length) return 0;
+    const rows = local.map(business => this.toRow({ ...business, id: `local-${crypto.randomUUID()}` }));
+    await this.request('/rest/v1/businesses', { method: 'POST', body: JSON.stringify(rows), headers: { Prefer: 'return=minimal' } });
+    localStorage.removeItem(this.storageKey);
+    return local.length;
+  }
+
   async delete(id: string): Promise<void> {
     if (!this.configured) {
       localStorage.setItem(this.storageKey, JSON.stringify(this.getLocal().filter(b => b.id !== id)));
@@ -62,7 +77,7 @@ export class BusinessService {
     const path = `${crypto.randomUUID()}-${safeName}`;
     const response = await fetch(`${environment.supabaseUrl}/storage/v1/object/business-images/${path}`, {
       method: 'POST',
-      headers: { apikey: environment.supabaseAnonKey, Authorization: `Bearer ${this.accessToken()}`, 'Content-Type': file.type, 'x-upsert': 'false' },
+      headers: { apikey: environment.supabaseAnonKey, ...(this.accessToken() ? { Authorization: `Bearer ${this.accessToken()}` } : {}), 'Content-Type': file.type, 'x-upsert': 'false' },
       body: file
     });
     if (!response.ok) throw new Error(await this.errorMessage(response));
@@ -81,7 +96,8 @@ export class BusinessService {
   private async request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
     const headers = new Headers(options.headers || {});
     headers.set('apikey', environment.supabaseAnonKey);
-    headers.set('Authorization', `Bearer ${this.accessToken()}`);
+    const token = this.accessToken();
+    if (token) headers.set('Authorization', `Bearer ${token}`);
     headers.set('Content-Type', 'application/json');
     const response = await fetch(`${environment.supabaseUrl}${path}`, { ...options, headers });
     if (!response.ok) throw new Error(await this.errorMessage(response));
@@ -91,8 +107,8 @@ export class BusinessService {
   }
 
   private accessToken(): string {
-    try { return JSON.parse(localStorage.getItem('seman-auth') || '{}').access_token || environment.supabaseAnonKey; }
-    catch { return environment.supabaseAnonKey; }
+    try { return JSON.parse(localStorage.getItem('seman-auth') || '{}').access_token || ''; }
+    catch { return ''; }
   }
 
   private async errorMessage(response: Response): Promise<string> {

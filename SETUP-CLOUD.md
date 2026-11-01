@@ -31,14 +31,23 @@
 
 הפונקציה שולחת את הפנייה ל-OWNER_EMAIL. כתובת השולחת חייבת להיות מאומתת ב-Resend. אין לשים את מפתח Resend בקוד Angular או ב-GitHub.
 
-## 5. בדיקת ענן
+## 5. Sitemap ו-Google
+1. לאחר רכישת דומיין וחיבורו לאחסון, הגדירי את כתובת האתר: `supabase secrets set SITE_URL=https://YOUR_DOMAIN`.
+2. פרסמי את מפת האתר הדינמית: `supabase functions deploy sitemap`.
+3. הגדירי באחסון האתר Rewrite מ-`/sitemap.xml` לכתובת הפונקציה `https://YOUR_PROJECT_REF.supabase.co/functions/v1/sitemap`. את סוג ה-Rewrite המדויק נגדיר לאחר בחירת שירות האחסון.
+4. החליפי ב-`public/robots.txt` את `YOUR_DOMAIN` בדומיין האמיתי.
+5. הוסיפי את האתר ל-Google Search Console, אמתִי בעלות והגישי `https://YOUR_DOMAIN/sitemap.xml`.
+
+מפת האתר תכלול את דף הבית ואת כל עמודי העסקים המפורסמים. גוגל מחליט בעצמו מתי לסרוק ולאנדקס עמודים ואיזה דירוג לתת להם.
+
+## 6. בדיקת ענן
 1. הריצי `npm install` ואז `npm start`.
 2. היכנסי ל-`/admin` והתחברי עם משתמש המנהלת שיצרת.
 3. הוסיפי עסק בדיקה, סמני פרסום ושמרי.
 4. פתחי `/biz/slug-העסק` בחלון פרטי או בטלפון כדי לוודא שהעמוד הציבורי נטען.
 5. בדקי העלאת תמונה ושליחת טופס יצירת קשר.
 
-## 6. GitHub
+## 7. GitHub
 מתוך תיקיית הפרויקט:
 
 ```bash

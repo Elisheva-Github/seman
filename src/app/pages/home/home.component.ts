@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BusinessService } from '../../services/business.service';
+import { Business } from '../../models/business.model';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -94,7 +95,7 @@ import { environment } from '../../../environments/environment';
   `
 })
 export class HomeComponent {
-  businesses: any[] = [];
+  businesses: Business[] = [];
   readonly ownerEmail = environment.ownerEmail;
   sending = false;
   formMessage = '';
@@ -116,7 +117,7 @@ export class HomeComponent {
     try {
       const response = await fetch(`${environment.supabaseUrl}/functions/v1/send-contact`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: environment.supabaseAnonKey, Authorization: `Bearer ${environment.supabaseAnonKey}` },
+        headers: { 'Content-Type': 'application/json', apikey: environment.supabaseAnonKey },
         body: JSON.stringify(payload)
       });
       if (!response.ok) {

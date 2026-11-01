@@ -18,7 +18,7 @@ npm start
 - שדה להעלאת תמונת מוצר/מקום בלבד (לא תמונות אנשים) לאחסון Supabase.
 - שכבת גישה ל-Supabase Database + Storage וכניסת מנהלת.
 - Edge Function לשליחת פניות מייל דרך Resend.
-- Meta title/description לעמודי עסקים ו-robots.txt ראשוני.
+- Meta title/description לעמודי עסקים, sitemap דינמי ו-robots.txt ראשוני.
 
 ## חיבור לענן
 קראי את `SETUP-CLOUD.md` ובצעי את שלבי ההקמה. פרטי Supabase עדיין placeholders בקובצי environment עד שתיצרי פרויקט משלך. אין אפשרות להפעיל ענן אמיתי בלי פרטי החשבון וההרשאות שלך.
@@ -31,6 +31,7 @@ npm start
 - `src/app/services/auth.service.ts` – התחברות מנהלת
 - `supabase/migrations` – טבלאות, הרשאות ואחסון
 - `supabase/functions/send-contact` – שליחת מייל דרך Resend
+- `supabase/functions/sitemap` – מפת אתר דינמית לעמודי עסקים מפורסמים
 
 ## חשוב לפני השקה
 יש להגדיר Supabase, משתמשת מנהלת, Resend, דומיין ואחסון אתר. יש לבצע בדיקות הרשאות, גיבויים, פרטיות, הגבלת קצב לטופס והגדרות SEO/Google Search Console לפני קבלת לקוחות אמיתיים.
