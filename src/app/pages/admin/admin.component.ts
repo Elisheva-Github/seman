@@ -29,7 +29,7 @@ import { AuthService } from '../../services/auth.service';
           @for (business of businesses; track business.id) {
             <article class="admin-row">
               <div class="admin-avatar"><span class="pin-mark"></span></div>
-              <div class="admin-details"><h3>{{business.name}}</h3><p>{{business.category}} · {{business.address}}</p><a [routerLink]="['/biz', business.slug]" target="_blank">פתיחת העמוד הציבורי ↗</a></div>
+              <div class="admin-details"><h3>{{business.name}}</h3><p>{{business.category}} · {{business.address}}</p><a [href]="businessUrl(business)" target="_blank" rel="noopener">פתיחת העמוד הציבורי ↗</a></div>
               <span class="status" [class.off]="!business.published">{{business.published ? 'מפורסם' : 'טיוטה'}}</span>
               <button class="button outline small" (click)="share(business, 'copy')">העתקת קישור</button><button class="button outline small" (click)="share(business, 'whatsapp')">WhatsApp</button><button class="button outline small" (click)="share(business, 'sms')">SMS</button><button class="button outline small" (click)="share(business, 'email')">מייל</button><button class="button outline small" (click)="edit(business)">עריכה</button><button class="delete" (click)="remove(business.id)">מחיקה</button>
             </article>
@@ -98,7 +98,16 @@ export class AdminComponent {
   async save(): Promise<void> {
     if (!this.editing) return;
     this.busy = true; this.error = '';
-    const value = { ...this.editing, id: this.editing.id || `local-${crypto.randomUUID()}`, slug: this.editing.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '') };
+    const rawSlug = (this.editing.slug || '').trim().toLowerCase();
+    const slugSource = rawSlug || this.editing.name.trim().toLowerCase();
+    const transliteration: Record<string, string> = { 'א':'a','ב':'b','ג':'g','ד':'d','ה':'h','ו':'v','ז':'z','ח':'ch','ט':'t','י':'y','כ':'k','ך':'k','ל':'l','מ':'m','ם':'m','נ':'n','ן':'n','ס':'s','ע':'a','פ':'p','ף':'f','צ':'ts','ץ':'ts','ק':'k','ר':'r','ש':'sh','ת':'t' };
+    const normalizedSlug = Array.from(slugSource).map(char => transliteration[char] ?? char).join('')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').replace(/-{2,}/g, '-');
+    const slug = normalizedSlug || `business-${Date.now()}`;
+    const duplicate = this.businesses.some(item => item.slug === slug && item.id !== this.editing?.id);
+    if (duplicate) { this.error = 'כתובת הקישור הזו כבר קיימת. בחרי כתובת אחרת לעסק.'; this.busy = false; return; }
+    const value = { ...this.editing, id: this.editing.id || `local-${crypto.randomUUID()}`, slug };
+    this.editing.slug = slug;
     try {
       await this.service.save(value);
       this.editing = null;
@@ -147,8 +156,12 @@ export class AdminComponent {
     finally { this.busy = false; input.value = ''; }
   }
 
+  businessUrl(business: Business): string {
+    return `${window.location.origin}/biz/${encodeURIComponent(business.slug)}`;
+  }
+
   share(business: Business, channel: 'copy' | 'whatsapp' | 'sms' | 'email'): void {
-    const url = `${window.location.origin}/biz/${business.slug}`;
+    const url = this.businessUrl(business);
     const text = `${business.name} – ${business.category}\nטלפון: ${business.phone}\nמייל: ${business.email}\nאתר: ${business.website}\nכתובת: ${business.address}\n${url}`;
     const encoded = encodeURIComponent(text);
     if (channel === 'whatsapp') window.open(`https://wa.me/?text=${encoded}`, '_blank', 'noopener');
