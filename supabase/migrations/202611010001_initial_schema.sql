@@ -13,11 +13,14 @@ create table if not exists public.businesses (
   address text not null default '',
   hours text not null default '',
   image_url text not null default '',
+  gallery_urls text[] not null default '{}',
   whatsapp text not null default '',
   published boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.businesses add column if not exists gallery_urls text[] not null default '{}';
 
 create index if not exists businesses_published_idx on public.businesses (published);
 create index if not exists businesses_slug_idx on public.businesses (slug);

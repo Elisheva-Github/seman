@@ -3,9 +3,9 @@ import { Business } from '../models/business.model';
 import { environment } from '../../environments/environment';
 
 const DEMO_BUSINESSES: Business[] = [
-  { id: 'demo-1', slug: 'miri-paot', name: 'מירי פאות', category: 'עיצוב פאות ומטפחות', description: 'מבחר פאות ומטפחות בהתאמה אישית, עם יחס אישי ומקצועי.', phone: '052-0000001', email: 'miri@example.com', website: '', address: 'נווה יעקב, ירושלים', hours: 'א׳–ה׳ בתיאום מראש', imageUrl: '', whatsapp: '972520000001', published: true },
-  { id: 'demo-2', slug: 'esti-cosmetics', name: 'אסתי קוסמטיקה', category: 'טיפולי פנים וקוסמטיקה', description: 'טיפולי קוסמטיקה באווירה נעימה ומקצועית.', phone: '052-0000002', email: 'esti@example.com', website: '', address: 'פסגת זאב, ירושלים', hours: 'א׳–ה׳ 09:00–18:00', imageUrl: '', whatsapp: '972520000002', published: true },
-  { id: 'demo-3', slug: 'a-cohen', name: 'שיפוצים א. כהן', category: 'שיפוץ ותיקונים', description: 'עבודות שיפוץ, תיקונים ותחזוקה לבית ולעסק.', phone: '052-0000003', email: 'cohen@example.com', website: '', address: 'חיפה', hours: 'א׳–ה׳ 08:00–17:00', imageUrl: '', whatsapp: '972520000003', published: true }
+  { id: 'demo-1', slug: 'miri-paot', name: 'מירי פאות', category: 'עיצוב פאות ומטפחות', description: 'מבחר פאות ומטפחות בהתאמה אישית, עם יחס אישי ומקצועי.', phone: '052-0000001', email: 'miri@example.com', website: '', address: 'נווה יעקב, ירושלים', hours: 'א׳–ה׳ בתיאום מראש', imageUrl: '', galleryUrls: [], whatsapp: '972520000001', published: true },
+  { id: 'demo-2', slug: 'esti-cosmetics', name: 'אסתי קוסמטיקה', category: 'טיפולי פנים וקוסמטיקה', description: 'טיפולי קוסמטיקה באווירה נעימה ומקצועית.', phone: '052-0000002', email: 'esti@example.com', website: '', address: 'פסגת זאב, ירושלים', hours: 'א׳–ה׳ 09:00–18:00', imageUrl: '', galleryUrls: [], whatsapp: '972520000002', published: true },
+  { id: 'demo-3', slug: 'a-cohen', name: 'שיפוצים א. כהן', category: 'שיפוץ ותיקונים', description: 'עבודות שיפוץ, תיקונים ותחזוקה לבית ולעסק.', phone: '052-0000003', email: 'cohen@example.com', website: '', address: 'חיפה', hours: 'א׳–ה׳ 08:00–17:00', imageUrl: '', galleryUrls: [], whatsapp: '972520000003', published: true }
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -118,11 +118,11 @@ export class BusinessService {
   }
 
   private fromRow(row: any): Business {
-    return { id: row.id, slug: row.slug, name: row.name, category: row.category || '', description: row.description || '', phone: row.phone || '', email: row.email || '', website: row.website || '', address: row.address || '', hours: row.hours || '', imageUrl: row.image_url || '', whatsapp: row.whatsapp || '', published: !!row.published };
+    return { id: row.id, slug: row.slug, name: row.name, category: row.category || '', description: row.description || '', phone: row.phone || '', email: row.email || '', website: row.website || '', address: row.address || '', hours: row.hours || '', imageUrl: row.image_url || '', galleryUrls: row.gallery_urls || [], whatsapp: row.whatsapp || '', published: !!row.published };
   }
 
   private toRow(b: Business): Record<string, unknown> {
-    const row: Record<string, unknown> = { slug: b.slug, name: b.name, category: b.category, description: b.description, phone: b.phone, email: b.email, website: b.website, address: b.address, hours: b.hours, image_url: b.imageUrl, whatsapp: b.whatsapp, published: b.published };
+    const row: Record<string, unknown> = { slug: b.slug, name: b.name, category: b.category, description: b.description, phone: b.phone, email: b.email, website: b.website, address: b.address, hours: b.hours, image_url: b.imageUrl, gallery_urls: b.galleryUrls || [], whatsapp: b.whatsapp, published: b.published };
     if (b.id && !b.id.startsWith('local-')) row['id'] = b.id;
     return row;
   }

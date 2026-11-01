@@ -35,6 +35,9 @@ import { BusinessService } from '../../services/business.service';
           @if (business.website) { <p><strong>אתר:</strong> <a [href]="websiteUrl" target="_blank" rel="noopener">{{business.website}}</a></p> }
           @if (business.address) { <p><strong>כתובת:</strong> {{business.address}}</p> }
         </section>
+        @if (business.galleryUrls?.length) {
+          <section class="business-gallery"><h2>גלריית תמונות</h2><div class="gallery-grid">@for (imageUrl of business.galleryUrls; track imageUrl) { <img [src]="imageUrl" [alt]="'תמונה של ' + business.name" loading="lazy"> }</div></section>
+        }
       </section>
       <footer class="public-footer">העמוד נבנה באמצעות <a routerLink="/">סמן – מסמנים את העסק שלך במפה</a></footer>
     </main>

@@ -50,7 +50,7 @@ import { AuthService } from '../../services/auth.service';
                 <label>שעות פעילות<input [(ngModel)]="editing.hours" name="hours"></label>
                 <label>WhatsApp (מספר בינלאומי)<input [(ngModel)]="editing.whatsapp" name="whatsapp" placeholder="9725XXXXXXXX"></label>
                 <label>תמונת מוצר או מקום – ללא אנשים<input [(ngModel)]="editing.imageUrl" name="imageUrl" placeholder="קישור לתמונה"></label>
-                <label>או העלאת תמונה מהמחשב<input type="file" accept="image/*" (change)="uploadImage($event)"></label>
+                <label>תמונות מוצרים או מקום העסק – ללא אנשים<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple (change)="uploadImages($event)"></label><small class="wide">אפשר להעלות כמה תמונות. התמונות יוצגו בגלריה בעמוד העסק.</small>
                 <label class="wide">תיאור העסק<textarea rows="3" [(ngModel)]="editing.description" name="description"></textarea></label>
                 <label class="check"><input type="checkbox" [(ngModel)]="editing.published" name="published"> לפרסם את העמוד</label>
               </div>
@@ -91,7 +91,7 @@ export class AdminComponent {
 
   newBusiness(): void {
     this.error = '';
-    this.editing = { id: '', slug: '', name: '', category: '', description: '', phone: '', email: '', website: '', address: '', hours: '', imageUrl: '', whatsapp: '', published: true };
+    this.editing = { id: '', slug: '', name: '', category: '', description: '', phone: '', email: '', website: '', address: '', hours: '', imageUrl: '', galleryUrls: [], whatsapp: '', published: true };
   }
   edit(b: Business): void { this.error = ''; this.editing = { ...b }; }
 
@@ -131,15 +131,20 @@ export class AdminComponent {
     finally { this.busy = false; }
   }
 
-  async uploadImage(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file || !this.editing) return;
-    if (!file.type.startsWith('image/')) { this.error = 'אפשר להעלות קובצי תמונה בלבד.'; return; }
-    if (file.size > 5 * 1024 * 1024) { this.error = 'גודל התמונה המרבי הוא 5MB.'; return; }
+  async uploadImages(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files || []);
+    if (!files.length || !this.editing) return;
+    const invalid = files.find(file => !['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024);
+    if (invalid) { this.error = 'יש לבחור תמונות JPG, PNG, WEBP, AVIF או GIF עד 5MB לתמונה.'; input.value = ''; return; }
     this.busy = true; this.error = '';
-    try { this.editing.imageUrl = await this.service.uploadImage(file); }
-    catch (e) { this.error = this.message(e); }
-    finally { this.busy = false; }
+    try {
+      const urls: string[] = [];
+      for (const file of files) urls.push(await this.service.uploadImage(file));
+      this.editing.galleryUrls = [...(this.editing.galleryUrls || []), ...urls];
+      if (!this.editing.imageUrl && urls.length) this.editing.imageUrl = urls[0];
+    } catch (e) { this.error = this.message(e); }
+    finally { this.busy = false; input.value = ''; }
   }
 
   share(business: Business, channel: 'copy' | 'whatsapp' | 'sms' | 'email'): void {
