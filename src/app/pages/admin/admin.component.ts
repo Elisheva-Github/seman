@@ -31,7 +31,14 @@ import { AuthService } from '../../services/auth.service';
               <div class="admin-avatar"><span class="pin-mark"></span></div>
               <div class="admin-details"><h3>{{business.name}}</h3><p>{{business.category}} · {{business.address}}</p><a [href]="businessUrl(business)" target="_blank" rel="noopener">פתיחת העמוד הציבורי ↗</a></div>
               <span class="status" [class.off]="!business.published">{{business.published ? 'מפורסם' : 'טיוטה'}}</span>
-              <button class="button outline small" (click)="share(business, 'copy')">העתקת קישור</button><button class="button outline small" (click)="share(business, 'whatsapp')">WhatsApp</button><button class="button outline small" (click)="share(business, 'sms')">SMS</button><button class="button outline small" (click)="share(business, 'email')">מייל</button><button class="button outline small" (click)="edit(business)">עריכה</button><button class="delete" (click)="remove(business.id)">מחיקה</button>
+              <div class="admin-actions">
+                <button class="admin-action" type="button" (click)="share(business, 'copy')"><span aria-hidden="true">⧉</span> העתקת קישור</button>
+                <button class="admin-action whatsapp-action" type="button" (click)="share(business, 'whatsapp')"><span aria-hidden="true">◉</span> WhatsApp</button>
+                <button class="admin-action" type="button" (click)="share(business, 'sms')"><span aria-hidden="true">✉</span> SMS</button>
+                <button class="admin-action" type="button" (click)="share(business, 'email')"><span aria-hidden="true">＠</span> מייל</button>
+                <button class="admin-action edit-action" type="button" (click)="edit(business)"><span aria-hidden="true">✎</span> עריכה</button>
+                <button class="admin-action delete-action" type="button" (click)="remove(business.id)"><span aria-hidden="true">×</span> מחיקה</button>
+              </div>
             </article>
           }
         </div>
@@ -49,7 +56,11 @@ import { AuthService } from '../../services/auth.service';
                 <label>כתובת העסק<input [(ngModel)]="editing.address" name="address"></label>
                 <label>שעות פעילות<input [(ngModel)]="editing.hours" name="hours"></label>
                 <label>WhatsApp (מספר בינלאומי)<input [(ngModel)]="editing.whatsapp" name="whatsapp" placeholder="9725XXXXXXXX"></label>
-                <label>תמונת מוצר או מקום – ללא אנשים<input [(ngModel)]="editing.imageUrl" name="imageUrl" placeholder="קישור לתמונה"></label>
+                <label>תמונת כיסוי לעמוד העסק<input [(ngModel)]="editing.imageUrl" name="imageUrl" placeholder="קישור לתמונה"></label>
+                <label>לוגו העסק<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" (change)="uploadBrandAsset($event, 'logo')"></label>
+                @if (editing.logoUrl) { <img class="brand-preview" [src]="editing.logoUrl" alt="תצוגה מקדימה של לוגו העסק"> }
+                <label>Favicon – אייקון ללשונית הדפדפן<input type="file" accept="image/png,image/x-icon,image/vnd.microsoft.icon,image/svg+xml" (change)="uploadBrandAsset($event, 'favicon')"></label>
+                @if (editing.faviconUrl) { <img class="favicon-preview" [src]="editing.faviconUrl" alt="תצוגה מקדימה של favicon"> }
                 <label>תמונות מוצרים או מקום העסק – ללא אנשים<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple (change)="uploadImages($event)"></label><small class="wide">אפשר להעלות כמה תמונות. התמונות יוצגו בגלריה בעמוד העסק.</small>
                 <label class="wide">תיאור העסק<textarea rows="3" [(ngModel)]="editing.description" name="description"></textarea></label>
                 <label class="check"><input type="checkbox" [(ngModel)]="editing.published" name="published"> לפרסם את העמוד</label>
@@ -91,7 +102,7 @@ export class AdminComponent {
 
   newBusiness(): void {
     this.error = '';
-    this.editing = { id: '', slug: '', name: '', category: '', description: '', phone: '', email: '', website: '', address: '', hours: '', imageUrl: '', galleryUrls: [], whatsapp: '', published: true };
+    this.editing = { id: '', slug: '', name: '', category: '', description: '', phone: '', email: '', website: '', address: '', hours: '', imageUrl: '', logoUrl: '', faviconUrl: '', galleryUrls: [], whatsapp: '', published: true };
   }
   edit(b: Business): void { this.error = ''; this.editing = { ...b }; }
 
@@ -138,6 +149,18 @@ export class AdminComponent {
     try { await this.service.migrateLocalToCloud(); this.localCount = 0; await this.refresh(); alert('הנתונים הועברו לענן בהצלחה.'); }
     catch (e) { this.error = this.message(e); }
     finally { this.busy = false; }
+  }
+
+  async uploadBrandAsset(event: Event, kind: 'logo' | 'favicon'): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.editing) return;
+    const allowed = kind === 'logo' ? ['image/jpeg','image/png','image/webp','image/svg+xml'] : ['image/png','image/x-icon','image/vnd.microsoft.icon','image/svg+xml'];
+    if (!allowed.includes(file.type) || file.size > 2 * 1024 * 1024) { this.error = 'יש לבחור קובץ תמונה מתאים עד 2MB.'; input.value = ''; return; }
+    this.busy = true; this.error = '';
+    try { const url = await this.service.uploadImage(file); if (kind === 'logo') this.editing.logoUrl = url; else this.editing.faviconUrl = url; }
+    catch (e) { this.error = this.message(e); }
+    finally { this.busy = false; input.value = ''; }
   }
 
   async uploadImages(event: Event): Promise<void> {

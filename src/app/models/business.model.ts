@@ -10,6 +10,8 @@ export interface Business {
   address: string;
   hours: string;
   imageUrl: string;
+  logoUrl: string;
+  faviconUrl: string;
   galleryUrls: string[];
   whatsapp: string;
   published: boolean;

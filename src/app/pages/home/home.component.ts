@@ -10,7 +10,7 @@ import { environment } from '../../../environments/environment';
   selector: 'app-home',
   template: `
   <header class="site-header">
-    <a class="brand" routerLink="/"><span class="pin-mark"></span> סמן</a>
+    <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a>
     <nav aria-label="ניווט ראשי"><a href="#why">למה סמן</a><a href="#how">איך זה עובד</a><a href="#examples">דוגמאות</a><a href="#audience">למי מתאים</a><a href="#contact">יצירת קשר</a></nav>
     <a class="button small" href="#contact">אני רוצה עמוד לעסק שלי</a>
   </header>
@@ -63,8 +63,18 @@ import { environment } from '../../../environments/environment';
       <div class="business-grid">
         @for (business of businesses; track business.id) {
           <article class="business-card">
-            <div class="business-image"><span class="pin-mark card-pin"></span></div>
-            <div class="business-info"><h3>{{ business.name }}</h3><p>{{ business.category }} · {{ business.address }}</p><a [routerLink]="['/biz', business.slug]">לצפייה בעמוד לדוגמה ←</a></div>
+            <div class="business-image" [style.backgroundImage]="business.imageUrl ? 'url(' + business.imageUrl + ')' : null">
+              @if (business.logoUrl) { <img class="business-card-logo" [src]="business.logoUrl" [alt]="'הלוגו של ' + business.name"> }
+              @if (!business.imageUrl) { <span class="pin-mark card-pin"></span> }
+              <span class="business-image-label">עמוד עסק בסמן</span>
+            </div>
+            <div class="business-info">
+              <h3>{{ business.name }}</h3>
+              <p>{{ business.category }}@if (business.address) { · {{ business.address }} }</p>
+              <a class="card-button" [routerLink]="['/biz', business.slug]">
+                <span>לצפייה בעמוד העסק</span><span class="card-button-arrow" aria-hidden="true">←</span>
+              </a>
+            </div>
           </article>
         }
       </div>
@@ -91,7 +101,7 @@ import { environment } from '../../../environments/environment';
       </form>
     </section>
   </main>
-  <footer><a class="brand" routerLink="/"><span class="pin-mark"></span> סמן</a><p>עמוד אינטרנט אישי, פשוט ומקצועי לכל עסק קטן ולעצמאי — כל הפרטים במקום אחד.</p><a routerLink="/admin">כניסה לניהול</a><p>© 2026 סמן. כל הזכויות שמורות.</p></footer>
+  <footer><a class="brand" routerLink="/"><span class="pin-mark"></span> סמן</a><p>עמוד אינטרנט אישי, פשוט ומקצועי לכל עסק קטן ולעצמאי — כל הפרטים במקום אחד.</p><p>© 2026 סמן. כל הזכויות שמורות.</p></footer>
   `
 })
 export class HomeComponent {

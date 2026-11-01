@@ -10,21 +10,22 @@ import { BusinessService } from '../../services/business.service';
   selector: 'app-business',
   template: `
   @if (business) {
-    <header class="business-header"><a class="brand" routerLink="/"><span class="pin-mark"></span> סמן</a><a routerLink="/">לאתר סמן</a></header>
+    <header class="business-header"><a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a><a routerLink="/">לאתר סמן</a></header>
     <main class="public-business">
       <div class="public-cover" [style.background-image]="business.imageUrl ? 'url(' + business.imageUrl + ')' : ''"><span class="pin-mark hero-pin" aria-hidden="true"></span></div>
       <section class="public-info">
+        @if (business.logoUrl) { <img class="business-logo" [src]="business.logoUrl" [alt]="'הלוגו של ' + business.name"> }
         @if (business.category) { <span class="eyebrow">{{business.category}}</span> }
         <h1>{{business.name}}</h1>
         @if (business.description) { <p class="lead">{{business.description}}</p> }
         @if (business.address) { <p class="detail-line"><span class="detail-icon">⌖</span>{{business.address}}</p> }
         @if (business.hours) { <p class="detail-line"><span class="detail-icon">◷</span>{{business.hours}}</p> }
         <div class="actions">
-          @if (business.phone) { <a class="button" [href]="'tel:' + business.phone">חיוג לעסק</a> }
-          @if (business.whatsapp || business.phone) { <a class="button whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener">WhatsApp</a> }
-          @if (business.email) { <a class="button outline" [href]="'mailto:' + business.email">שליחת מייל</a> }
+          @if (business.phone) { <a class="button contact-action" [href]="'tel:' + business.phone"><span aria-hidden="true">☎</span> חיוג לעסק</a> }
+          @if (business.whatsapp || business.phone) { <a class="button whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener"><span aria-hidden="true">◉</span> WhatsApp</a> }
+          @if (business.email) { <a class="button outline" [href]="'mailto:' + business.email"><span aria-hidden="true">✉</span> שליחת מייל</a> }
           @if (business.phone) { <a class="button outline" [href]="smsUrl">שליחת SMS</a> }
-          @if (business.address) { <a class="button outline" [href]="mapsUrl" target="_blank" rel="noopener">ניווט לעסק</a> }
+          @if (business.address) { <a class="button outline" [href]="mapsUrl" target="_blank" rel="noopener"><span aria-hidden="true">⌖</span> ניווט לעסק</a> }
           @if (business.website) { <a class="button outline" [href]="websiteUrl" target="_blank" rel="noopener">לאתר העסק</a> }
           <button class="button outline" type="button" (click)="shareDetails()">שיתוף פרטי העסק</button>
         </div>
@@ -59,6 +60,7 @@ export class BusinessComponent implements OnInit {
         this.business = await this.service.getBySlug(params.get('slug') ?? '');
         if (this.business) {
           this.title.setTitle(`${this.business.name} | סמן`);
+          if (this.business.faviconUrl) { let icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]'); if (!icon) { icon = document.createElement('link'); icon.rel = 'icon'; document.head.appendChild(icon); } icon.href = this.business.faviconUrl; }
           this.meta.updateTag({ name: 'description', content: `${this.business.name} – ${this.business.category}. ${this.business.description}`.slice(0, 155) });
         }
       } catch { this.business = undefined; }
