@@ -14,7 +14,7 @@
 1. ב-Supabase פתחי SQL Editor.
 2. פתחי במחשב את `supabase/migrations/202611010001_initial_schema.sql`.
 3. העתיקי את כל תוכנו לחלון SQL Editor והריצי.
-4. בקוד המדיניות מוגדר שהמנהלת היא `elisheva92121@gmail.com`. אם כתובת המייל של משתמשת הניהול שונה, החליפי אותה בקובץ ה-SQL לפני ההרצה.
+4. בקוד המדיניות מוגדרת כרגע כתובת מנהלת קיימת: `elisheva92121@gmail.com`. לפני הרצת ה-SQL, ודאי שזו כתובת המייל המדויקת של משתמשת הניהול ועדכני אותה בכל המדיניות בקובץ אם צריך. אין לשמור סיסמה בקוד או ב-GitHub.
 5. ב-Supabase → Authentication → Providers/Settings ודאי שיצירת משתמשים (Sign ups) כבויה. צרי משתמש מנהלת אחד דרך Authentication → Users → Add user, עם כתובת המייל המורשית שב-SQL.
 
 ## 3. הפעלת תמונות
@@ -26,7 +26,7 @@
 2. התקיני את Supabase CLI לפי התיעוד הרשמי והתחברי: `supabase login`.
 3. מתוך תיקיית הפרויקט הריצי `supabase link --project-ref YOUR_PROJECT_REF`.
 4. הגדירי סודות (החליפי בערכים האמיתיים):
-   `supabase secrets set RESEND_API_KEY=re_xxxxxxxxx OWNER_EMAIL=elisheva92121@gmail.com MAIL_FROM="Seman <hello@YOUR_VERIFIED_DOMAIN>"`
+   `supabase secrets set RESEND_API_KEY=re_xxxxxxxxx OWNER_EMAIL=elisheva92121@gmail.com SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY MAIL_FROM="Seman <hello@YOUR_VERIFIED_DOMAIN>"`
 5. פרסמי את הפונקציה: `supabase functions deploy send-contact`.
 
 הפונקציה שולחת את הפנייה ל-OWNER_EMAIL. כתובת השולחת חייבת להיות מאומתת ב-Resend. אין לשים את מפתח Resend בקוד Angular או ב-GitHub.
@@ -69,6 +69,6 @@ git push -u origin main
 ## מצב נוכחי והגבלות
 - כאשר פרטי Supabase עדיין נשארים כ-placeholder, האפליקציה עובדת במצב הדגמה ושומרת ב-localStorage. זה **לא** ענן.
 - לאחר הכנסת פרטי Supabase והרצת ה-SQL, נתוני העסקים והעלאות התמונות עוברים לענן. פעולות ניהול דורשות משתמשת מורשית.
-- טופס המייל יפעל רק לאחר פרסום Edge Function והגדרת Resend.
+- טופס דף הבית שולח פניות לכתובת OWNER_EMAIL. טופס בעמוד עסק שולח לכתובת המייל השמורה בעסק, ורק אם העסק מפורסם. שני הטפסים יפעלו רק לאחר פרסום Edge Function והגדרת Resend והסודות הנדרשים.
 - שיתוף WhatsApp/SMS/Email נפתח באפליקציה המתאימה במכשיר. זה לא שירות דיוור אוטומטי.
 - לפני השקה מסחרית יש להוסיף גיבויים, ניטור, הגבלת קצב לטופס, בדיקת פרטיות/תנאי שימוש והגדרת דומיין.

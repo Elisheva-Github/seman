@@ -86,19 +86,39 @@ import { environment } from '../../../environments/environment';
       <div class="digital-card-points"><span>✓ פרטי העסק במקום אחד</span><span>✓ טלפון, מייל וכתובת</span><span>✓ קישור אחד לשיתוף</span></div>
     </section>
 
-    <section id="contact" class="section contact">
-      <div><span class="eyebrow">יצירת קשר</span><h2>יש לך עסק ורוצה לתת לו מקום ברשת?</h2><p class="lead">נשמח לשמוע ממך! אפשר ליצור קשר ישירות בדרך שהכי נוחה לך.</p><p>טלפון: <a href="tel:0527192121">052-719-2121</a></p><p>אימייל: <a [href]="'mailto:' + ownerEmail">{{ownerEmail}}</a></p></div>
-      <form (submit)="sendContact($event)">
-        <label class="honeypot" aria-hidden="true">לא למילוי<input name="company_website" tabindex="-1" autocomplete="off"></label>
-        <label>שם מלא<input required name="name" placeholder="ישראל ישראלי"></label>
-        <label>שם העסק<input name="business" placeholder="שם העסק"></label>
-        <label>אימייל<input required type="email" name="email" placeholder="you@example.com"></label>
-        <label>טלפון<input name="phone" placeholder="052-1234567"></label>
-        <label>ספרו לנו על העסק<textarea name="message" rows="3"></textarea></label>
-        <button class="button" type="submit" [disabled]="sending">{{sending ? 'שולחת…' : 'שליחת פנייה'}}</button>
-        @if (formMessage) { <p class="form-feedback" [class.form-error]="formError" role="status">{{formMessage}}</p> }
-        <small>הפנייה תישלח ישירות למייל של סמן.</small>
-      </form>
+    <section id="contact" class="section seman-contact-section">
+      <div class="seman-contact-heading">
+        <span class="eyebrow">יצירת קשר</span>
+        <h2>בואו נדבר!</h2>
+        <p class="lead">רוצים להצטרף לסמן או לשמוע פרטים נוספים? נשמח לשמוע מכם.</p>
+      </div>
+      <div class="seman-contact-cards"><a class="seman-contact-card phone-card" [href]="ownerPhoneHref">
+      <span class="seman-contact-icon" aria-hidden="true">☎</span><strong>טלפון</strong>
+          <b dir="ltr">{{ownerPhone}}</b><small>לחיוג ישיר</small>
+        </a>
+        <a class="seman-contact-card whatsapp-card" [href]="'https://wa.me/' + ownerWhatsapp" target="_blank" rel="noopener">
+          <span class="seman-contact-icon" aria-hidden="true">◉</span><strong>WhatsApp</strong>
+          <b>שלחו הודעה</b><small>נשמח לענות לכם</small>
+        </a>
+        <a class="seman-contact-card email-card" [href]="'mailto:' + ownerEmail">
+          <span class="seman-contact-icon" aria-hidden="true">✉</span><strong>דוא״ל</strong>
+          <b class="contact-email" dir="ltr">{{ownerEmail}}</b><small>כתבו לנו</small>
+        </a>
+      </div>
+      <div class="seman-contact-form-wrap">
+        <div class="seman-form-intro"><span class="seman-form-icon">✎</span><h3>או השאירו לנו פרטים</h3><p>נחזור אליכם בהקדם</p></div>
+        <form class="seman-contact-form" (submit)="sendContact($event)">
+          <label class="honeypot" aria-hidden="true">לא למילוי<input name="company_website" tabindex="-1" autocomplete="off"></label>
+          <label>שם מלא<input required name="name" placeholder="איך קוראים לכם?"></label>
+          <label>שם העסק<input name="business" placeholder="שם העסק"></label>
+          <label>טלפון לחזרה<input name="phone" type="tel" placeholder="052-1234567"></label>
+          <label>כתובת דוא״ל<input required type="email" name="email" placeholder="you@example.com"></label>
+          <label class="full-field">ספרו לנו קצת על העסק<textarea name="message" rows="3" placeholder="במה נוכל לעזור?"></textarea></label>
+          <button class="button seman-submit" type="submit" [disabled]="sending">{{sending ? 'שולחת…' : 'שליחת פרטים'}}</button>
+          @if (formMessage) { <p class="form-feedback" [class.form-error]="formError" role="status">{{formMessage}}</p> }
+          <small>הפנייה תישלח ישירות למייל של סמן.</small>
+        </form>
+      </div>
     </section>
   </main>
   <footer><a class="brand" routerLink="/"><span class="pin-mark"></span> סמן</a><p>עמוד אינטרנט אישי, פשוט ומקצועי לכל עסק קטן ולעצמאי — כל הפרטים במקום אחד.</p><p>© 2026 סמן. כל הזכויות שמורות.</p></footer>
@@ -107,6 +127,8 @@ import { environment } from '../../../environments/environment';
 export class HomeComponent {
   businesses: Business[] = [];
   readonly ownerEmail = environment.ownerEmail;
+  readonly ownerPhone = environment.ownerPhone;
+  readonly ownerWhatsapp = environment.ownerWhatsapp;
   sending = false;
   formMessage = '';
   formError = false;
@@ -141,4 +163,7 @@ export class HomeComponent {
       this.formMessage = error instanceof Error && error.message.includes('Failed to fetch') ? 'שליחת המייל עדיין לא הוגדרה. יש להשלים את חיבור שירות המייל בענן.' : (error instanceof Error ? error.message : 'אירעה שגיאה בשליחת הפנייה.');
     } finally { this.sending = false; }
   }
+  get ownerPhoneHref(): string {
+  return 'tel:' + String(this.ownerPhone ?? '').replace(/[^0-9+]/g, '');
+}
 }

@@ -26,6 +26,19 @@ Deno.serve(async (request: Request) => {
 
     const apiKey = Deno.env.get('RESEND_API_KEY');
     const ownerEmail = Deno.env.get('OWNER_EMAIL') || 'elisheva92121@gmail.com';
+    let recipientEmail = ownerEmail;
+    const businessSlug = String(payload.businessSlug || '').trim().slice(0, 120);
+    if (businessSlug) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+      if (!supabaseUrl || !anonKey) return json({ error: 'חיבור מסד הנתונים לשליחת פניות עדיין לא הוגדר.' }, 503);
+      const lookup = await fetch(`${supabaseUrl}/rest/v1/businesses?select=email&slug=eq.${encodeURIComponent(businessSlug)}&published=eq.true&limit=1`, { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } });
+      if (!lookup.ok) return json({ error: 'לא הצלחנו לאתר את פרטי העסק.' }, 502);
+      const businesses = await lookup.json();
+      const businessEmail = String(businesses?.[0]?.email || '').trim();
+      if (!businessEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail)) return json({ error: 'לעסק עדיין לא הוגדרה כתובת דוא״ל לקבלת פניות.' }, 400);
+      recipientEmail = businessEmail;
+    }
     const sender = Deno.env.get('MAIL_FROM') || 'Seman <onboarding@resend.dev>';
     if (!apiKey) return json({ error: 'שירות שליחת המייל עדיין לא הוגדר בשרת.' }, 503);
 
@@ -44,9 +57,9 @@ Deno.serve(async (request: Request) => {
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: sender,
-        to: [ownerEmail],
+        to: [recipientEmail],
         reply_to: email,
-        subject: `פנייה חדשה מאתר סמן – ${name}`,
+        subject: businessSlug ? `פנייה חדשה לעסק ${businessSlug} – ${name}` : `פנייה חדשה מאתר סמן – ${name}`, 
         text: lines.join('\n'),
       }),
     });

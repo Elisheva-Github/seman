@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { Business } from '../../models/business.model';
 import { BusinessService } from '../../services/business.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   standalone: true,
@@ -11,36 +12,71 @@ import { BusinessService } from '../../services/business.service';
   template: `
   @if (business) {
     <header class="business-header"><a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a><a routerLink="/">לאתר סמן</a></header>
-    <main class="public-business">
-      <div class="public-cover" [style.background-image]="business.imageUrl ? 'url(' + business.imageUrl + ')' : ''"><span class="pin-mark hero-pin" aria-hidden="true"></span></div>
-      <section class="public-info">
-        @if (business.logoUrl) { <img class="business-logo" [src]="business.logoUrl" [alt]="'הלוגו של ' + business.name"> }
-        @if (business.category) { <span class="eyebrow">{{business.category}}</span> }
-        <h1>{{business.name}}</h1>
-        @if (business.description) { <p class="lead">{{business.description}}</p> }
-        @if (business.address) { <p class="detail-line"><span class="detail-icon">⌖</span>{{business.address}}</p> }
-        @if (business.hours) { <p class="detail-line"><span class="detail-icon">◷</span>{{business.hours}}</p> }
-        <div class="actions">
-          @if (business.phone) { <a class="button contact-action" [href]="'tel:' + business.phone"><span aria-hidden="true">☎</span> חיוג לעסק</a> }
-          @if (business.whatsapp || business.phone) { <a class="button whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener"><span aria-hidden="true">◉</span> WhatsApp</a> }
-          @if (business.email) { <a class="button outline" [href]="'mailto:' + business.email"><span aria-hidden="true">✉</span> שליחת מייל</a> }
-          @if (business.phone) { <a class="button outline" [href]="smsUrl">שליחת SMS</a> }
-          @if (business.address) { <a class="button outline" [href]="mapsUrl" target="_blank" rel="noopener"><span aria-hidden="true">⌖</span> ניווט לעסק</a> }
-          @if (business.website) { <a class="button outline" [href]="websiteUrl" target="_blank" rel="noopener">לאתר העסק</a> }
-          <button class="button outline" type="button" (click)="shareDetails()">שיתוף פרטי העסק</button>
+    <main class="public-business business-page-redesign">
+      <section class="business-top-section">
+        <div class="business-cover-wrap">
+          @if (business.imageUrl) { <img class="business-cover-image" [src]="business.imageUrl" [alt]="'תמונה של ' + business.name"> }
+          @else { <div class="business-cover-placeholder"><span class="pin-mark hero-pin" aria-hidden="true"></span></div> }
+          @if (business.logoUrl) { <div class="business-logo-badge"><img [src]="business.logoUrl" [alt]="'הלוגו של ' + business.name"></div> }
         </div>
-        <section class="business-contact-card">
-          <h2>פרטי העסק</h2>
-          @if (business.phone) { <p><strong>טלפון:</strong> <a [href]="'tel:' + business.phone">{{business.phone}}</a></p> }
-          @if (business.email) { <p><strong>מייל:</strong> <a [href]="'mailto:' + business.email">{{business.email}}</a></p> }
-          @if (business.website) { <p><strong>אתר:</strong> <a [href]="websiteUrl" target="_blank" rel="noopener">{{business.website}}</a></p> }
-          @if (business.address) { <p><strong>כתובת:</strong> {{business.address}}</p> }
-        </section>
-        @if (business.galleryUrls?.length) {
-          <section class="business-gallery"><h2>גלריית תמונות</h2><div class="gallery-grid">@for (imageUrl of business.galleryUrls; track imageUrl) { <img [src]="imageUrl" [alt]="'תמונה של ' + business.name" loading="lazy"> }</div></section>
-        }
+        <div class="business-intro">
+          @if (business.category) { <span class="eyebrow">{{business.category}}</span> }
+          <h1>{{business.name}}</h1>
+          @if (business.description) { <p class="lead">{{business.description}}</p> }
+          @if (business.hours) { <p class="detail-line"><span class="detail-icon">◷</span>{{business.hours}}</p> }
+        </div>
       </section>
-      <footer class="public-footer">העמוד נבנה באמצעות <a routerLink="/">סמן – מסמנים את העסק שלך במפה</a></footer>
+
+      <section class="business-contact-section">
+        <div class="section-heading-center"><span class="eyebrow">נשמח לעמוד לשירותכם</span><h2>דברו איתנו</h2><p>כל דרכי יצירת הקשר עם {{business.name}} במקום אחד</p></div>
+        <div class="business-contact-tiles">
+          @if (business.address) {
+            <a class="business-contact-tile address-tile" [href]="mapsUrl" target="_blank" rel="noopener">
+              <span class="tile-icon">⌖</span><strong>כתובת</strong><span>{{business.address}}</span><small>לניווט במפה ←</small>
+            </a>
+          }
+          @if (business.phone) {
+            <a class="business-contact-tile phone-tile" [href]="'tel:' + business.phone">
+              <span class="tile-icon">☎</span><strong>טלפון</strong><span dir="ltr">{{business.phone}}</span><small>לחיוג ←</small>
+            </a>
+          }
+          @if (business.email || business.website) {
+            <div class="business-contact-tile email-tile">
+              <span class="tile-icon">✉</span><strong>דוא״ל</strong>
+              @if (business.email) { <span class="email-copy-line" dir="ltr">{{business.email}} <button type="button" class="copy-email-button" (click)="copyEmail()" aria-label="העתקת כתובת המייל" title="העתקת מייל">⧉</button></span> }
+              @if (business.website) { <a class="tile-website" [href]="websiteUrl" target="_blank" rel="noopener" dir="ltr">{{business.website}}</a> }
+              @if (business.email) { <a class="tile-email-link" [href]="'mailto:' + business.email">שליחת מייל</a> }
+            </div>
+          }
+        </div>
+        <div class="business-extra-actions">
+          @if (business.whatsapp || business.phone) { <a class="button whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener">◉ WhatsApp</a> }
+          @if (business.phone) { <a class="button outline" [href]="smsUrl">✉ שליחת SMS</a> }
+          <button class="button outline" type="button" (click)="shareDetails()">↗ שיתוף העסק</button>
+        </div>
+      </section>
+
+@if (business.galleryUrls.length) {
+        <section class="business-gallery"><h2>קצת מהעסק שלנו</h2><div class="gallery-grid">@for (imageUrl of business.galleryUrls; track imageUrl) { <img [src]="imageUrl" [alt]="'תמונה של ' + business.name" loading="lazy"> }</div></section>
+      }
+
+      <section class="business-question-section">
+        <div class="question-heading"><span class="question-icon">✉</span><h2>יש לכם שאלה?</h2><p>השאירו פרטים ונחזור אליכם בהקדם</p></div>
+        <form class="business-question-form" (submit)="sendQuestion($event)">
+          <label class="honeypot" aria-hidden="true">לא למילוי<input name="company_website" tabindex="-1" autocomplete="off"></label>
+          <label>שם מלא<input required name="name" placeholder="איך קוראים לכם?"></label>
+          <label>טלפון<input name="phone" type="tel" placeholder="מספר טלפון לחזרה"></label>
+          <label>כתובת דוא״ל<input required name="email" type="email" placeholder="כתובת המייל שלכם"></label>
+          <label class="full-field">תוכן ההודעה<textarea name="message" rows="4" placeholder="כתבו לנו במה נוכל לעזור..."></textarea></label>
+          <button class="button seman-submit" type="submit" [disabled]="sending">{{sending ? 'שולחת…' : 'שליחת פרטים'}}</button>
+          @if (formMessage) { <p class="form-feedback" [class.form-error]="formError" role="status">{{formMessage}}</p> }
+          <small>הפנייה תישלח לכתובת הדוא״ל של העסק.</small>
+        </form>
+      </section>
+      <footer class="business-brand-footer">
+        <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a>
+        <p>© כל הזכויות שמורות {{business.name}}</p>
+      </footer>
     </main>
   } @else if (loading) {
     <main class="not-found"><p>טוענת את פרטי העסק…</p></main>
@@ -52,6 +88,9 @@ import { BusinessService } from '../../services/business.service';
 export class BusinessComponent implements OnInit {
   business?: Business;
   loading = true;
+  sending = false;
+  formMessage = '';
+  formError = false;
   constructor(private route: ActivatedRoute, private service: BusinessService, private title: Title, private meta: Meta) {}
   ngOnInit(): void {
     this.route.paramMap.subscribe(async params => {
@@ -76,13 +115,43 @@ export class BusinessComponent implements OnInit {
     if (!this.business) return '';
     return `${this.business.name}\n${this.business.category}\nטלפון: ${this.business.phone}\nמייל: ${this.business.email}\nאתר: ${this.business.website}\nכתובת: ${this.business.address}\n${window.location.href}`;
   }
+  async copyEmail(): Promise<void> {
+    if (!this.business?.email) return;
+    try { await navigator.clipboard.writeText(this.business.email); alert('כתובת המייל הועתקה.'); }
+    catch { window.prompt('העתיקו את כתובת המייל:', this.business.email); }
+  }
   async shareDetails(): Promise<void> {
     if (navigator.share) {
       try { await navigator.share({ title: this.business?.name || 'פרטי עסק', text: this.shareText, url: window.location.href }); }
       catch { /* המשתמשת ביטלה את חלון השיתוף */ }
     } else {
-      await navigator.clipboard?.writeText(this.shareText);
-      alert('פרטי העסק הועתקו. אפשר להדביק אותם בהודעה.');
+      try { await navigator.clipboard.writeText(this.shareText); alert('פרטי העסק הועתקו. אפשר להדביק אותם בהודעה.'); }
+      catch { window.prompt('העתיקו את פרטי העסק:', this.shareText); }
     }
+  }
+  async sendQuestion(event: Event): Promise<void> {
+    event.preventDefault();
+    if (!this.business) return;
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const payload: Record<string, string> = { businessSlug: this.business.slug };
+    formData.forEach((value, key) => { payload[key] = String(value); });
+    this.sending = true; this.formMessage = ''; this.formError = false;
+    try {
+      const response = await fetch(`${environment.supabaseUrl}/functions/v1/send-contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: environment.supabaseAnonKey },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || 'לא הצלחנו לשלוח את הפנייה. נסו שוב מאוחר יותר.');
+      }
+      this.formMessage = 'הפנייה נשלחה בהצלחה! העסק יחזור אליכם בהקדם.';
+      form.reset();
+    } catch (error) {
+      this.formError = true;
+      this.formMessage = error instanceof Error && error.message.includes('Failed to fetch') ? 'שליחת הפנייה עדיין לא הוגדרה בענן.' : (error instanceof Error ? error.message : 'אירעה שגיאה בשליחת הפנייה.');
+    } finally { this.sending = false; }
   }
 }

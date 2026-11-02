@@ -106,11 +106,17 @@ export class BusinessService {
     return content ? JSON.parse(content) as T : undefined as T;
   }
 
-  private accessToken(): string {
-    try { return JSON.parse(localStorage.getItem('seman-auth') || '{}').access_token || ''; }
-    catch { return ''; }
-  }
+private accessToken(): string {
+  try {
+    const authData = JSON.parse(
+      localStorage.getItem('sb-bfmheqetjjotocunjoxe-auth-token') || '{}'
+    );
 
+    return authData.access_token || '';
+  } catch {
+    return '';
+  }
+}
   private async errorMessage(response: Response): Promise<string> {
     const body = await response.text();
     try { const parsed = JSON.parse(body); return parsed.message || parsed.msg || parsed.error_description || body; }
