@@ -72,3 +72,27 @@ git push -u origin main
 - טופס דף הבית שולח פניות לכתובת OWNER_EMAIL. טופס בעמוד עסק שולח לכתובת המייל השמורה בעסק, ורק אם העסק מפורסם. שני הטפסים יפעלו רק לאחר פרסום Edge Function והגדרת Resend והסודות הנדרשים.
 - שיתוף WhatsApp/SMS/Email נפתח באפליקציה המתאימה במכשיר. זה לא שירות דיוור אוטומטי.
 - לפני השקה מסחרית יש להוסיף גיבויים, ניטור, הגבלת קצב לטופס, בדיקת פרטיות/תנאי שימוש והגדרת דומיין.
+
+
+## 8. עדכון נובמבר 2026 – הפעלה/השבתה ודוחות יומיים
+
+יש לבצע את השלבים הבאים לפני שימוש בגרסה המעודכנת:
+
+1. ב-Supabase SQL Editor להריץ את הקובץ `supabase/migrations/202611030001_business_controls_and_visits.sql`.
+2. לפרוס את פונקציות Edge:
+   ```bash
+   supabase functions deploy track-visit
+   supabase functions deploy send-daily-reports
+   ```
+3. להגדיר סודות ב-Supabase (לא בקוד הדפדפן):
+   ```bash
+   supabase secrets set SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+   supabase secrets set DAILY_REPORT_SECRET=CREATE_A_LONG_RANDOM_SECRET
+   ```
+   ודאי שגם `SUPABASE_URL`, `RESEND_API_KEY`, `OWNER_EMAIL`, `MAIL_FROM` מוגדרים. `MAIL_FROM` חייב להיות שולח/דומיין מאומת ב-Resend.
+4. הפעילי את ההרחבות `pg_cron`, `pg_net` ו-`Vault` בפרויקט Supabase. בקובץ `supabase/DAILY-REPORT-SCHEDULER.sql` יש הוראות לשמירת כתובת הפונקציה והסוד ב-Vault ולתזמון אוטומטי. ברירת המחדל היא 18:00 UTC (20:00 בישראל בחורף); יש להתאים לשעון קיץ ולשעה הרצויה. לחלופין אפשר להשתמש בשירות תזמון חיצוני. בקשת POST צריכה לכלול header בשם `x-report-secret` עם הערך של `DAILY_REPORT_SECRET`. כתובת הפונקציה:
+   `https://YOUR_PROJECT_REF.supabase.co/functions/v1/send-daily-reports`
+5. דוח מנהלת סמן נשלח בכל הרצה וכולל את כל העסקים, מצב פעיל/לא פעיל ומספר כניסות. דוח למנהל עסק נשלח רק אם העסק פעיל, הופעל עבורו הדוח, יש לו כתובת מייל, ונרשמה לפחות כניסה אחת באותו יום UTC.
+6. בדיקת עשן: פתחי עמוד עסק מפורסם בחלון פרטי, בדקי שנרשמה שורה ב-`business_visits`, הפעילי את `send-daily-reports` באופן ידני ובדקי שהתקבלו המיילים.
+
+**הערות חשובות:** מדידת כניסות כרגע סופרת טעינות של עמוד עסק, ולא מבקר ייחודי. הדוח מסכם כניסות בלבד ואינו כולל עדיין פירוט פניות לפי WhatsApp/טלפון/טופס. הדוחות משתמשים בחלון יום UTC; יש להתאים את שעת התזמון ואת אזור הזמן לפני הפעלה מסחרית. נקודת הקצה למדידת כניסות ציבורית ולכן מומלץ להוסיף הגבלת קצב/הגנת בוט לפני קמפיין רחב.

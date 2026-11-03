@@ -15,4 +15,7 @@ export interface Business {
   galleryUrls: string[];
   whatsapp: string;
   published: boolean;
+  showInExamples: boolean;
+  sendVisitReportEmail: boolean;
+  showRecommendations: boolean;
 }

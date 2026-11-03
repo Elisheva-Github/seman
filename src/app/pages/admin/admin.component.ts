@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Business } from '../../models/business.model';
-import { BusinessService } from '../../services/business.service';
+import { BusinessService, Recommendation, SemanSettings } from '../../services/business.service';
 import { AuthService } from '../../services/auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -117,10 +117,23 @@ import { environment } from '../../../environments/environment';
               </div>
 
               <span class="status" [class.off]="!business.published">
-                {{business.published ? 'מפורסם' : 'טיוטה'}}
+                {{business.published ? 'פעיל – קישור זמין' : 'לא פעיל – קישור חסום'}}
               </span>
 
               <div class="admin-actions">
+                <button class="admin-action" type="button" (click)="toggleBusiness(business, 'published')" [disabled]="busy">
+                  {{business.published ? 'השבתת עסק' : 'הפעלת עסק'}}
+                </button>
+                <button class="admin-action" type="button" (click)="toggleBusiness(business, 'showInExamples')" [disabled]="busy">
+                  {{business.showInExamples ? 'הסתרה מדף סמן' : 'הצגה באתר סמן'}}
+                </button>
+                <button class="admin-action" type="button" (click)="toggleBusiness(business, 'showRecommendations')" [disabled]="busy">
+                  {{business.showRecommendations ? 'הסתרת המלצות' : 'הצגת המלצות'}}
+                </button>
+                <button class="admin-action delete-action" type="button" (click)="removeBusinessRecommendations(business)" [disabled]="busy">מחיקת המלצות לעסק</button>
+                <button class="admin-action" type="button" (click)="toggleBusiness(business, 'sendVisitReportEmail')" [disabled]="busy">
+                  {{business.sendVisitReportEmail ? 'ביטול דוח יומי' : 'הפעלת דוח יומי'}}
+                </button>
                 <button class="admin-action" type="button" (click)="share(business, 'copy')">
                   <span aria-hidden="true">⧉</span> העתקת קישור
                 </button>
@@ -143,6 +156,72 @@ import { environment } from '../../../environments/environment';
             </article>
           }
         </div>
+
+        <section class="editor admin-settings">
+          <h2>הגדרות אתר</h2>
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="settings.sendVisitReportEmail" name="sendVisitReportEmail" (change)="saveSiteSettings()">
+            שליחת דוחות כניסות למייל מופעלת
+          </label>
+          <p class="hint">המתג שומר את ההעדפה. כדי לשלוח דוח בפועל נדרש להגדיר גם מדידת כניסות, כתובת יעד ושירות מייל מתוזמן בצד השרת.</p>
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="settings.showRecommendationsSection" name="showRecommendationsSection" (change)="saveSiteSettings()">
+            להציג את אזור המלצות הלקוחות באתר
+          </label>
+          @if (settingsError) { <p class="form-error">{{settingsError}}</p> }
+        </section>
+
+        <section class="editor recommendations-admin">
+          <h2>המלצות לקוחות</h2>
+          <p>הוסיפי המלצות שיוצגו באתר כאשר אזור ההמלצות מופעל.</p>
+          <div class="form-grid">
+            <label>שם הלקוח
+              <input [(ngModel)]="recommendationDraft.customerName" name="recommendationCustomerName">
+            </label>
+            <label>שיוך המלצה
+              <select [(ngModel)]="recommendationDraft.businessId" name="recommendationBusiness">
+                <option value="">המלצות על סמן – האתר הראשי</option>
+                @for (business of businesses; track business.id) {
+                  <option [value]="business.id">{{business.name}}</option>
+                }
+              </select>
+            </label>
+            <label>סדר הצגה
+              <input type="number" min="0" [(ngModel)]="recommendationDraft.displayOrder" name="recommendationOrder">
+            </label>
+            <label class="wide">תוכן ההמלצה
+              <textarea rows="3" [(ngModel)]="recommendationDraft.content" name="recommendationContent"></textarea>
+            </label>
+            <label class="check">
+              <input type="checkbox" [(ngModel)]="recommendationDraft.published" name="recommendationPublished">
+              להציג המלצה זו באתר
+            </label>
+          </div>
+          <div class="actions">
+            <button class="button" type="button" (click)="saveRecommendation()" [disabled]="busy || !recommendationDraft.customerName.trim() || !recommendationDraft.content.trim()">
+              {{recommendationDraft.id ? 'שמירת שינויים' : 'הוספת המלצה'}}
+            </button>
+            @if (recommendationDraft.id) {
+              <button class="button outline" type="button" (click)="resetRecommendationDraft()">ביטול עריכה</button>
+            }
+          </div>
+          @if (recommendationsError) { <p class="form-error">{{recommendationsError}}</p> }
+          <div class="admin-list">
+            @for (recommendation of recommendations; track recommendation.id) {
+              <article class="admin-row">
+                <div class="admin-details">
+                  <h3>{{recommendation.customerName}}</h3>
+                  <p>{{recommendation.content}}</p>
+                  <small>{{recommendation.published ? 'מוצגת באתר' : 'מוסתרת באתר'}} · {{recommendationScope(recommendation)}}</small>
+                </div>
+                <div class="admin-actions">
+                  <button class="admin-action" type="button" (click)="editRecommendation(recommendation)">עריכה</button>
+                  <button class="admin-action delete-action" type="button" (click)="removeRecommendation(recommendation.id)">מחיקה</button>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
 
         @if (editing) {
           <section class="editor">
@@ -220,7 +299,7 @@ import { environment } from '../../../environments/environment';
 
                 <label>
                   תמונות מוצרים או מקום העסק – ללא אנשים
-                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple (change)="uploadImages($event)">
+                  <input type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple (change)="uploadImages($event)">
                 </label>
 
                 <small class="wide">
@@ -235,6 +314,19 @@ import { environment } from '../../../environments/environment';
                 <label class="check">
                   <input type="checkbox" [(ngModel)]="editing.published" name="published">
                   לפרסם את העמוד
+                </label>
+
+                <label class="check">
+                  <input type="checkbox" [(ngModel)]="editing.showInExamples" name="showInExamples" [disabled]="!editing.published">
+                  להציג את העסק באתר סמן
+                </label>
+                <label class="check">
+                  <input type="checkbox" [(ngModel)]="editing.showRecommendations" name="showRecommendations">
+                  להציג המלצות בעמוד העסק
+                </label>
+                <label class="check">
+                  <input type="checkbox" [(ngModel)]="editing.sendVisitReportEmail" name="sendVisitReportEmail">
+                  לשלוח למנהל העסק דוח יומי רק אם היו כניסות לעמוד
                 </label>
               </div>
 
@@ -265,6 +357,11 @@ export class AdminComponent {
   cloudMode = false;
   loggedIn = false;
   localCount = 0;
+  settings: SemanSettings = { sendVisitReportEmail: false, showRecommendationsSection: false };
+  settingsError = '';
+  recommendations: Recommendation[] = [];
+  recommendationsError = '';
+  recommendationDraft: Recommendation = this.emptyRecommendation();
 
   constructor(
     private service: BusinessService,
@@ -294,6 +391,7 @@ export class AdminComponent {
 
       this.loggedIn = true;
       await this.refresh();
+      await this.loadAdminContent();
     } catch (e) {
       this.loggedIn = false;
       this.error = this.message(e);
@@ -331,7 +429,10 @@ export class AdminComponent {
       faviconUrl: '',
       galleryUrls: [],
       whatsapp: '',
-      published: true
+      published: true,
+      showInExamples: true,
+      sendVisitReportEmail: false,
+      showRecommendations: true
     };
   }
 
@@ -396,6 +497,21 @@ export class AdminComponent {
     }
   }
 
+  async toggleBusiness(business: Business, field: 'published' | 'showInExamples' | 'showRecommendations' | 'sendVisitReportEmail'): Promise<void> {
+    const updated: Business = { ...business, [field]: !business[field] };
+    if (field === 'published' && !updated.published) updated.showInExamples = false;
+    this.busy = true;
+    this.error = '';
+    try {
+      await this.service.save(updated);
+      await this.refresh();
+    } catch (e) {
+      this.error = this.message(e);
+    } finally {
+      this.busy = false;
+    }
+  }
+
   async remove(id: string): Promise<void> {
     if (!confirm('למחוק את העסק ואת העמוד הציבורי שלו?')) return;
 
@@ -436,6 +552,7 @@ export class AdminComponent {
       this.loggedIn = true;
       this.loginPassword = '';
       await this.refresh();
+      await this.loadAdminContent();
     } catch (e) {
       this.loggedIn = false;
       this.error = this.message(e);
@@ -449,6 +566,87 @@ export class AdminComponent {
     this.loggedIn = false;
     this.businesses = [];
     this.editing = null;
+  }
+
+  private emptyRecommendation(): Recommendation {
+    return { id: '', customerName: '', content: '', displayOrder: 0, published: true, businessId: '' };
+  }
+
+  private async loadAdminContent(): Promise<void> {
+    try {
+      this.settings = await this.service.getSettings();
+      this.recommendations = await this.service.getRecommendations(true);
+      this.settingsError = '';
+      this.recommendationsError = '';
+    } catch (e) {
+      this.settingsError = this.message(e);
+      this.recommendationsError = this.message(e);
+    }
+  }
+
+  async saveSiteSettings(): Promise<void> {
+    this.settingsError = '';
+    try {
+      await this.service.saveSettings(this.settings);
+    } catch (e) {
+      this.settingsError = this.message(e);
+    }
+  }
+
+  async saveRecommendation(): Promise<void> {
+    if (!this.recommendationDraft.customerName.trim() || !this.recommendationDraft.content.trim()) return;
+    this.busy = true;
+    this.recommendationsError = '';
+    try {
+      await this.service.saveRecommendation(this.recommendationDraft);
+      this.resetRecommendationDraft();
+      this.recommendations = await this.service.getRecommendations(true);
+    } catch (e) {
+      this.recommendationsError = this.message(e);
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  recommendationScope(recommendation: Recommendation): string {
+    if (!recommendation.businessId) return 'אתר סמן';
+    return this.businesses.find(b => b.id === recommendation.businessId)?.name || 'עסק משויך';
+  }
+
+  editRecommendation(recommendation: Recommendation): void {
+    this.recommendationDraft = { ...recommendation };
+  }
+
+  resetRecommendationDraft(): void {
+    this.recommendationDraft = this.emptyRecommendation();
+  }
+
+  async removeBusinessRecommendations(business: Business): Promise<void> {
+    const count = this.recommendations.filter(r => r.businessId === business.id).length;
+    if (!count) { alert('לא נמצאו המלצות המשויכות לעסק הזה.'); return; }
+    if (!confirm(`למחוק את כל ${count} ההמלצות של ${business.name}? הפעולה אינה הפיכה.`)) return;
+    this.busy = true;
+    this.recommendationsError = '';
+    try {
+      await this.service.deleteBusinessRecommendations(business.id);
+      this.recommendations = await this.service.getRecommendations(true);
+      if (this.recommendationDraft.businessId === business.id) this.resetRecommendationDraft();
+    } catch (e) {
+      this.recommendationsError = this.message(e);
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  async removeRecommendation(id: string): Promise<void> {
+    if (!confirm('למחוק את ההמלצה?')) return;
+    this.recommendationsError = '';
+    try {
+      await this.service.deleteRecommendation(id);
+      this.recommendations = await this.service.getRecommendations(true);
+    } catch (e) {
+      this.recommendationsError = this.message(e);
+    }
   }
 
   async migrateLocal(): Promise<void> {
@@ -511,12 +709,12 @@ export class AdminComponent {
     if (!files.length || !this.editing) return;
 
     const invalid = files.find(file =>
-      !['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'].includes(file.type) ||
+      !( ['image/jpeg', 'image/png'].includes(file.type) || /\.(jpe?g|png)$/i.test(file.name) ) ||
       file.size > 5 * 1024 * 1024
     );
 
     if (invalid) {
-      this.error = 'יש לבחור תמונות JPG, PNG, WEBP, AVIF או GIF עד 5MB לתמונה.';
+      this.error = 'יש לבחור תמונות JPG, JPEG או PNG עד 5MB לתמונה.';
       input.value = '';
       return;
     }

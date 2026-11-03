@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BusinessService } from '../../services/business.service';
+import { BusinessService, Recommendation } from '../../services/business.service';
 import { Business } from '../../models/business.model';
 import { environment } from '../../../environments/environment';
 
@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
   template: `
   <header class="site-header">
     <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a>
-    <nav aria-label="ניווט ראשי"><a href="#why">למה סמן</a><a href="#how">איך זה עובד</a><a href="#examples">דוגמאות</a><a href="#audience">למי מתאים</a><a href="#contact">יצירת קשר</a></nav>
+    <nav aria-label="ניווט ראשי"><a href="#why">למה סמן</a><a href="#how">איך זה עובד</a><a href="#examples">דוגמאות</a><a href="#contact">יצירת קשר</a>@if (showRecommendationsSection && recommendations.length) { <a href="#recommendations">ממליצים על סמן</a> }</nav>
     <a class="button small" href="#contact">אני רוצה עמוד לעסק שלי</a>
   </header>
 
@@ -22,6 +22,12 @@ import { environment } from '../../../environments/environment';
         <h1>סמן<span>!</span><br>מסמנים את העסק שלך במפה.</h1>
         <p>אנחנו בסמן יוצרים לעסקים קטנים ולעצמאיים עמוד אינטרנט אישי, פשוט ומקצועי, שמרכז את כל הפרטים החשובים על העסק במקום אחד.</p>
         <p>בלי אתר מורכב, בלי תהליך ארוך ובלי הוצאות מיותרות. פשוט עמוד אחד שמאפשר ללקוחות להכיר אותך, למצוא אותך וליצור איתך קשר.</p>
+        <div class="audience-icons" aria-label="למי סמן מיועד">
+          <div><span aria-hidden="true">✂</span><b>בעלי מקצוע</b></div>
+          <div><span aria-hidden="true">▣</span><b>חנויות ועסקים</b></div>
+          <div><span aria-hidden="true">▤</span><b>עצמאיים</b></div>
+          <div><span aria-hidden="true">♡</span><b>נותני שירות</b></div>
+        </div>
         <div class="actions"><a class="button" href="#contact">אני רוצה עמוד לעסק שלי</a><a class="button outline" href="#why">למה סמן?</a></div>
         <div class="quick-points"><span>✓ בלי ידע טכני</span><span>✓ קישור אחד לשיתוף</span><span>✓ מותאם למובייל</span></div>
       </div>
@@ -51,15 +57,11 @@ import { environment } from '../../../environments/environment';
       </div>
     </section>
 
-    <section id="audience" class="section">
-      <span class="eyebrow">למי השירות מתאים?</span><h2>לכל עסק קטן או עצמאי שרוצה להיות נגיש וקל למציאה באינטרנט.</h2>
-      <div class="tags"><span>פאניות</span><span>קוסמטיקאיות</span><span>בעלי מקצוע</span><span>חנויות ועסקים מקומיים</span><span>מכירות ביתיות</span><span>יועצים ועצמאיים</span><span>חוגים וסדנאות</span></div>
-      <p class="lead audience-note">לא משנה באיזה תחום העסק שלך — גם לך מגיע עמוד אינטרנט משלך.</p>
-    </section>
-
     <section id="examples" class="section soft">
       <span class="eyebrow">דוגמאות</span><h2>ככה נראה עמוד עסק עם סמן.</h2>
       <p class="lead">הצצה לעמודים לדוגמה של עסקים מסוגים שונים — כל אחד עם הפרטים, דרכי הקשר והמיקום שלו.</p>
+      <p class="load-feedback" role="status" [hidden]="!businessesError">{{businessesError}}</p>
+      @if (!businesses.length && !businessesError) { <p class="empty-businesses">עמודי העסקים שיוצגו בסמן יופיעו כאן בקרוב.</p> }
       <div class="business-grid">
         @for (business of businesses; track business.id) {
           <article class="business-card">
@@ -80,11 +82,6 @@ import { environment } from '../../../environments/environment';
       </div>
     </section>
 
-    <section id="digital-card" class="section digital-card-section">
-      <span class="eyebrow">כרטיס ביקור דיגיטלי</span><h2>וגם כרטיס ביקור דיגיטלי, בכיס של הלקוח.</h2>
-      <p class="lead">בנוסף לעמוד העסק, אפשר לשתף את פרטי העסק בקלות ולשמור אותם באנשי הקשר בטלפון.</p>
-      <div class="digital-card-points"><span>✓ פרטי העסק במקום אחד</span><span>✓ טלפון, מייל וכתובת</span><span>✓ קישור אחד לשיתוף</span></div>
-    </section>
 
     <section id="contact" class="section seman-contact-section">
       <div class="seman-contact-heading">
@@ -96,14 +93,21 @@ import { environment } from '../../../environments/environment';
       <span class="seman-contact-icon" aria-hidden="true">☎</span><strong>טלפון</strong>
           <b dir="ltr">{{ownerPhone}}</b><small>לחיוג ישיר</small>
         </a>
-        <a class="seman-contact-card whatsapp-card" [href]="'https://wa.me/' + ownerWhatsapp" target="_blank" rel="noopener">
-          <span class="seman-contact-icon" aria-hidden="true">◉</span><strong>WhatsApp</strong>
-          <b>שלחו הודעה</b><small>נשמח לענות לכם</small>
-        </a>
         <a class="seman-contact-card email-card" [href]="'mailto:' + ownerEmail">
           <span class="seman-contact-icon" aria-hidden="true">✉</span><strong>דוא״ל</strong>
           <b class="contact-email" dir="ltr">{{ownerEmail}}</b><small>כתבו לנו</small>
         </a>
+        @if (hasOwnerWhatsapp) {
+          <a class="seman-contact-card whatsapp-card" [href]="ownerWhatsappUrl" target="_blank" rel="noopener">
+            <span class="seman-contact-icon" aria-hidden="true">◉</span><strong>WhatsApp</strong>
+            <b dir="ltr">{{ownerWhatsapp}}</b><small class="whatsapp-status active">● זמין לפנייה – מספר הוגדר</small>
+          </a>
+        } @else {
+          <div class="seman-contact-card whatsapp-card whatsapp-inactive">
+            <span class="seman-contact-icon" aria-hidden="true">◉</span><strong>WhatsApp</strong>
+            <small class="whatsapp-status inactive">● לא זמין – לא הוגדר מספר</small>
+          </div>
+        }
       </div>
       <div class="seman-contact-form-wrap">
         <div class="seman-form-intro"><span class="seman-form-icon">✎</span><h3>או השאירו לנו פרטים</h3><p>נחזור אליכם בהקדם</p></div>
@@ -120,23 +124,65 @@ import { environment } from '../../../environments/environment';
         </form>
       </div>
     </section>
+    @if (showRecommendationsSection && recommendations.length) {
+      <section id="recommendations" class="section">
+        <span class="eyebrow">ממליצים על סמן</span>
+        <h2>מה הלקוחות שלנו אומרים?</h2>
+        <div class="business-grid recommendations-grid">
+          @for (recommendation of recommendations; track recommendation.id) {
+            <article class="feature recommendation-card">
+              <span aria-hidden="true">★★★★★</span>
+              <p>{{recommendation.content}}</p>
+              <strong>{{recommendation.customerName}}</strong>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
   </main>
   <footer><a class="brand" routerLink="/"><span class="pin-mark"></span> סמן</a><p>עמוד אינטרנט אישי, פשוט ומקצועי לכל עסק קטן ולעצמאי — כל הפרטים במקום אחד.</p><p>© 2026 סמן. כל הזכויות שמורות.</p></footer>
   `
 })
 export class HomeComponent {
   businesses: Business[] = [];
+  businessesError = '';
+  recommendations: Recommendation[] = [];
+  showRecommendationsSection = false;
   readonly ownerEmail = environment.ownerEmail;
   readonly ownerPhone = environment.ownerPhone;
-  readonly ownerWhatsapp = environment.ownerWhatsapp;
+  readonly ownerWhatsapp = (environment.ownerWhatsapp || '').replace(/\D/g, '');
+  get hasOwnerWhatsapp(): boolean { return /^\d{8,15}$/.test(this.ownerWhatsapp); }
+  get ownerWhatsappUrl(): string { return `https://wa.me/${this.ownerWhatsapp}?text=${encodeURIComponent('שלום, הגעתי דרך אתר סמן')}`; }
   sending = false;
   formMessage = '';
   formError = false;
   constructor(private businessService: BusinessService) { void this.loadBusinesses(); }
 
   async loadBusinesses(): Promise<void> {
-    try { this.businesses = await this.businessService.getPublished(); }
-    catch { this.businesses = []; }
+    // Load each section independently: a missing recommendations/settings table
+    // must never cause the public business examples to disappear.
+    try {
+      this.businesses = await this.businessService.getExamples();
+      this.businessesError = '';
+    } catch (error) {
+      console.error('Failed to load Seman homepage businesses', error);
+      this.businesses = [];
+      this.businessesError = 'לא הצלחנו לטעון כרגע את העסקים. כדאי לרענן את העמוד בעוד רגע.';
+    }
+
+    try {
+      const settings = await this.businessService.getSettings();
+      this.showRecommendationsSection = settings.showRecommendationsSection;
+    } catch {
+      this.showRecommendationsSection = false;
+    }
+
+    try {
+      this.recommendations = await this.businessService.getRecommendations(false, null);
+    } catch {
+      this.recommendations = [];
+    }
   }
 
   async sendContact(event: Event): Promise<void> {

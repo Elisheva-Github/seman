@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { Business } from '../../models/business.model';
-import { BusinessService } from '../../services/business.service';
+import { BusinessService, Recommendation } from '../../services/business.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -11,9 +11,19 @@ import { environment } from '../../../environments/environment';
   selector: 'app-business',
   template: `
   @if (business) {
-    <header class="business-header"><a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a><a routerLink="/">לאתר סמן</a></header>
+    <header class="business-header">
+      <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a>
+      <nav class="business-page-nav" aria-label="ניווט בעמוד העסק">
+        <a href="#business-top" (click)="scrollToSection($event, 'business-top')">ראש העמוד</a>
+        <a href="#business-contact" (click)="scrollToSection($event, 'business-contact')">יצירת קשר</a>
+        @if (business.galleryUrls.length) { <a href="#business-gallery" (click)="scrollToSection($event, 'business-gallery')">גלריה</a> }
+        @if (recommendations.length) { <a href="#business-recommendations" (click)="scrollToSection($event, 'business-recommendations')">המלצות</a> }
+        <a href="#business-question" (click)="scrollToSection($event, 'business-question')">השאירו הודעה</a>
+      </nav>
+      <a routerLink="/">לאתר סמן</a>
+    </header>
     <main class="public-business business-page-redesign">
-      <section class="business-top-section">
+      <section id="business-top" class="business-top-section">
         <div class="business-cover-wrap">
           @if (business.imageUrl) { <img class="business-cover-image" [src]="business.imageUrl" [alt]="'תמונה של ' + business.name"> }
           @else { <div class="business-cover-placeholder"><span class="pin-mark hero-pin" aria-hidden="true"></span></div> }
@@ -27,7 +37,7 @@ import { environment } from '../../../environments/environment';
         </div>
       </section>
 
-      <section class="business-contact-section">
+      <section id="business-contact" class="business-contact-section">
         <div class="section-heading-center"><span class="eyebrow">נשמח לעמוד לשירותכם</span><h2>דברו איתנו</h2><p>כל דרכי יצירת הקשר עם {{business.name}} במקום אחד</p></div>
         <div class="business-contact-tiles">
           @if (business.address) {
@@ -50,17 +60,18 @@ import { environment } from '../../../environments/environment';
           }
         </div>
         <div class="business-extra-actions">
-          @if (business.whatsapp || business.phone) { <a class="button whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener">◉ WhatsApp</a> }
+          @if (hasWhatsApp) { <a class="button whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener">◉ שליחת הודעת WhatsApp</a> }
+          @else { <span class="whatsapp-unavailable">{{business.phone || business.email ? 'WhatsApp לא זמין בעסק זה. אפשר להתקשר או לשלוח מייל.' : 'WhatsApp אינו זמין בעסק זה.'}}</span> }
           @if (business.phone) { <a class="button outline" [href]="smsUrl">✉ שליחת SMS</a> }
           <button class="button outline" type="button" (click)="shareDetails()">↗ שיתוף העסק</button>
         </div>
       </section>
 
 @if (business.galleryUrls.length) {
-        <section class="business-gallery"><h2>קצת מהעסק שלנו</h2><div class="gallery-grid">@for (imageUrl of business.galleryUrls; track imageUrl) { <img [src]="imageUrl" [alt]="'תמונה של ' + business.name" loading="lazy"> }</div></section>
+        <section id="business-gallery" class="business-gallery"><h2>קצת מהעסק שלנו</h2><div class="gallery-grid">@for (imageUrl of business.galleryUrls; track imageUrl) { <img [src]="imageUrl" [alt]="'תמונה של ' + business.name" loading="lazy"> }</div></section>
       }
 
-      <section class="business-question-section">
+      <section id="business-question" class="business-question-section">
         <div class="question-heading"><span class="question-icon">✉</span><h2>יש לכם שאלה?</h2><p>השאירו פרטים ונחזור אליכם בהקדם</p></div>
         <form class="business-question-form" (submit)="sendQuestion($event)">
           <label class="honeypot" aria-hidden="true">לא למילוי<input name="company_website" tabindex="-1" autocomplete="off"></label>
@@ -73,6 +84,17 @@ import { environment } from '../../../environments/environment';
           <small>הפנייה תישלח לכתובת הדוא״ל של העסק.</small>
         </form>
       </section>
+
+      @if (recommendations.length) {
+        <section id="business-recommendations" class="section business-recommendations-section">
+          <div class="section-heading-center"><span class="eyebrow">ממליצים על {{business.name}}</span><h2>מה הלקוחות שלנו אומרים?</h2></div>
+          <div class="business-recommendations-grid">
+            @for (recommendation of recommendations; track recommendation.id) {
+              <article class="feature recommendation-card"><span aria-hidden="true">★★★★★</span><p>{{recommendation.content}}</p><strong>{{recommendation.customerName}}</strong></article>
+            }
+          </div>
+        </section>
+      }
       <footer class="business-brand-footer">
         <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a>
         <p>© כל הזכויות שמורות {{business.name}}</p>
@@ -87,6 +109,7 @@ import { environment } from '../../../environments/environment';
 })
 export class BusinessComponent implements OnInit {
   business?: Business;
+  recommendations: Recommendation[] = [];
   loading = true;
   sending = false;
   formMessage = '';
@@ -99,14 +122,52 @@ export class BusinessComponent implements OnInit {
         this.business = await this.service.getBySlug(params.get('slug') ?? '');
         if (this.business) {
           this.title.setTitle(`${this.business.name} | סמן`);
-          if (this.business.faviconUrl) { let icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]'); if (!icon) { icon = document.createElement('link'); icon.rel = 'icon'; document.head.appendChild(icon); } icon.href = this.business.faviconUrl; }
+          const icon = this.ensureFaviconLink();
+          icon.href = this.business.faviconUrl || '/favicon.svg';
+          void this.trackVisit(this.business.id);
+          if (this.business.showRecommendations) {
+            try { this.recommendations = await this.service.getRecommendations(false, this.business.id); }
+            catch { this.recommendations = []; }
+          } else {
+            this.recommendations = [];
+          }
           this.meta.updateTag({ name: 'description', content: `${this.business.name} – ${this.business.category}. ${this.business.description}`.slice(0, 155) });
+          this.meta.updateTag({ name: 'robots', content: 'index,follow' });
         }
-      } catch { this.business = undefined; }
-      finally { this.loading = false; }
+      } catch { this.business = undefined; this.recommendations = []; }
+      finally {
+        if (!this.business) {
+          this.title.setTitle('העמוד לא נמצא | סמן');
+          this.ensureFaviconLink().href = '/favicon.svg';
+          this.meta.updateTag({ name: 'robots', content: 'noindex,nofollow' });
+        }
+        this.loading = false;
+      }
     });
   }
-  get phoneForWhatsApp(): string { return (this.business?.whatsapp || this.business?.phone || '').replace(/\D/g, '').replace(/^0/, '972'); }
+  scrollToSection(event: Event, sectionId: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const target = document.getElementById(sectionId);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  private ensureFaviconLink(): HTMLLinkElement {
+    let icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+    if (!icon) { icon = document.createElement('link'); icon.rel = 'icon'; document.head.appendChild(icon); }
+    return icon;
+  }
+  private async trackVisit(businessId: string): Promise<void> {
+    try {
+      await fetch(`${environment.supabaseUrl}/functions/v1/track-visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: environment.supabaseAnonKey },
+        body: JSON.stringify({ businessId })
+      });
+    } catch { /* מדידת ביקור אינה חוסמת טעינת עמוד עסק */ }
+  }
+  get phoneForWhatsApp(): string { return (this.business?.whatsapp || '').replace(/\D/g, '').replace(/^0/, '972'); }
+  get hasWhatsApp(): boolean { return /^\d{8,15}$/.test(this.phoneForWhatsApp); }
   get whatsappUrl(): string { return `https://wa.me/${this.phoneForWhatsApp}?text=${encodeURIComponent(this.shareText)}`; }
   get smsUrl(): string { return `sms:${this.business?.phone || ''}?body=${encodeURIComponent(this.shareText)}`; }
   get mapsUrl(): string { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(this.business?.address || '')}`; }
