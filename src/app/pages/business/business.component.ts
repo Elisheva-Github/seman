@@ -4,6 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { Business } from '../../models/business.model';
 import { BusinessService, Recommendation } from '../../services/business.service';
 import { environment } from '../../../environments/environment';
+import { SiteContentService } from '../../services/site-content.service';
 
 @Component({
   standalone: true,
@@ -12,7 +13,7 @@ import { environment } from '../../../environments/environment';
   template: `
   @if (business) {
     <header class="business-header">
-      <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a>
+      <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן@if (site.content.header.tagline) { <small>{{site.content.header.tagline}}</small> }</span></a>
       <nav class="business-page-nav" aria-label="ניווט בעמוד העסק">
         <a href="#business-top" (click)="scrollToSection($event, 'business-top')">ראש העמוד</a>
         <a href="#business-contact" (click)="scrollToSection($event, 'business-contact')">יצירת קשר</a>
@@ -68,7 +69,7 @@ import { environment } from '../../../environments/environment';
       </section>
 
 @if (business.galleryUrls.length) {
-        <section id="business-gallery" class="business-gallery"><h2>קצת מהעסק שלנו</h2><div class="gallery-grid">@for (imageUrl of business.galleryUrls; track imageUrl) { <img [src]="imageUrl" [alt]="'תמונה של ' + business.name" loading="lazy"> }</div></section>
+        <section id="business-gallery" class="business-gallery"><h2>קצת מהעסק שלנו</h2><div class="gallery-grid">@for (imageUrl of business.galleryUrls; track $index) { <img [src]="imageUrl" [alt]="'תמונה של ' + business.name" loading="lazy"> }</div></section>
       }
 
       <section id="business-question" class="business-question-section">
@@ -96,7 +97,7 @@ import { environment } from '../../../environments/environment';
         </section>
       }
       <footer class="business-brand-footer">
-        <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן<small>מסמנים את העסק שלך במפה</small></span></a>
+        <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן@if (site.content.header.tagline) { <small>{{site.content.header.tagline}}</small> }</span></a>
         <p>© כל הזכויות שמורות {{business.name}}</p>
       </footer>
     </main>
@@ -114,7 +115,7 @@ export class BusinessComponent implements OnInit {
   sending = false;
   formMessage = '';
   formError = false;
-  constructor(private route: ActivatedRoute, private service: BusinessService, private title: Title, private meta: Meta) {}
+  constructor(private route: ActivatedRoute, private service: BusinessService, private title: Title, private meta: Meta, public site: SiteContentService) { void this.site.load(); }
   ngOnInit(): void {
     this.route.paramMap.subscribe(async params => {
       this.loading = true;

@@ -164,3 +164,43 @@ html,body{max-width:100%;overflow-x:clip}.hero,.section,.admin-main,.public-busi
 .whatsapp-inactive{opacity:.82}
 @media(max-width:700px){.business-page-nav{gap:4px 14px;padding:10px 12px}.business-page-nav a{padding:7px 2px;font-size:13px}}
 .business-page-redesign section[id], #recommendations { scroll-margin-top: 24px; }
+
+/* ===== עריכת תוכן אתר סמן (CMS) ===== */
+.pre-line{white-space:pre-line}
+.content-loading{min-height:60vh;display:grid;place-items:center}
+.content-loading .pin-mark{font-size:54px;opacity:.55}
+.audience-title{font-size:20px;margin:22px 0 6px;font-weight:800}
+.audience-description{margin:0 0 4px;color:#626570;line-height:1.7;max-width:610px}
+.audience-title+.audience-icons,.audience-description+.audience-icons{margin-top:14px}
+footer .footer-contact{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+footer .footer-contact a,footer .footer-links a{color:#fff;font-weight:600;font-size:13px}
+footer .footer-links{display:flex;gap:6px 18px;flex-wrap:wrap;justify-content:center}
+footer .footer-links a:hover,footer .footer-contact a:hover{text-decoration:underline}
+.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 26px;padding:6px;background:#fff;border:1px solid var(--line);border-radius:14px;width:fit-content;max-width:100%}
+.admin-tabs button{border:0;background:transparent;padding:11px 20px;border-radius:10px;font:inherit;font-weight:700;color:#55515a;cursor:pointer}
+.admin-tabs button:hover{background:#fff4f2;color:var(--red)}
+.admin-tabs button.active{background:var(--red);color:#fff}
+.cms{margin-top:0}
+.cms .admin-list{margin-top:18px}
+.cms-row .status{align-self:flex-start}
+.cms-success{background:#e8f6ed;border-color:#bfe3cb;color:#1f6a3a}
+.cms-editor-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cms .hint{color:var(--muted);font-size:13px;line-height:1.6}
+.cms-list{margin:24px 0 0;padding:16px 18px 18px;border:1px solid var(--line);border-radius:14px;display:grid;gap:14px}
+.cms-list legend{padding:0 8px;font-weight:800}
+.cms-item{padding:14px;border:1px solid #f0e4e1;border-radius:12px;background:#fffaf8}
+.cms-item-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.cms-item-actions{display:inline-flex;gap:6px}
+.cms-item-actions .admin-action{min-height:34px;padding:6px 11px}
+.cms-actions{align-items:center}
+.cms-actions .button:disabled,.admin-action:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.cms-actions .button.danger{color:#b4232b;border-color:#e9aaaa}
+.cms-actions .button.danger:hover{background:#ffecec}
+.cms-dirty{color:#8a4a17!important;font-weight:700}
+.cms textarea{resize:vertical;min-height:60px}
+.gallery-edit{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.gallery-edit figure{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.gallery-edit img{display:block;width:100%;height:110px;object-fit:cover}
+.gallery-edit figcaption{display:flex;gap:6px;flex-wrap:wrap;padding:8px}
+.gallery-edit .admin-action{min-height:30px;padding:4px 9px;font-size:11px}
+@media(max-width:700px){.admin-tabs{width:100%}.admin-tabs button{flex:1;padding:10px 12px}.form-grid{grid-template-columns:1fr}}

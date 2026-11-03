@@ -171,6 +171,9 @@ export class BusinessService {
 
   async uploadImage(file: File): Promise<string> {
     if (!this.configured) throw new Error('יש להגדיר תחילה פרויקט Supabase כדי להעלות תמונות לענן.');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      throw new Error('ניתן להעלות רק תמונות JPG, PNG או WEBP עד 5MB.');
+    }
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
     const path = `${crypto.randomUUID()}-${safeName}`;
     const response = await fetch(`${environment.supabaseUrl}/storage/v1/object/business-images/${path}`, {

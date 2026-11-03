@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { Business } from '../../models/business.model';
 import { BusinessService, Recommendation, SemanSettings } from '../../services/business.service';
 import { AuthService } from '../../services/auth.service';
+import { SiteContentAdminComponent } from './site-content-admin.component';
 import { environment } from '../../../environments/environment';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, SiteContentAdminComponent],
   selector: 'app-admin',
   template: `
   <div class="admin-shell">
@@ -17,7 +18,7 @@ import { environment } from '../../../environments/environment';
       <a class="brand" routerLink="/">
         <span class="pin-mark" aria-hidden="true"></span> סמן
       </a>
-      <span>מערכת ניהול עסקים</span>
+      <span>מערכת ניהול סמן</span>
       <div class="header-actions">
         <a routerLink="/">חזרה לאתר ←</a>
         @if (cloudMode && loggedIn) {
@@ -64,6 +65,16 @@ import { environment } from '../../../environments/environment';
           }
         </section>
       } @else {
+        <nav class="admin-tabs" aria-label="אזורי ניהול">
+          <button type="button" [class.active]="tab === 'businesses'" (click)="tab = 'businesses'">ניהול עסקים</button>
+          <button type="button" [class.active]="tab === 'content'" (click)="tab = 'content'">עריכת תוכן אתר סמן</button>
+        </nav>
+
+        <div class="admin-content-tab" [hidden]="tab !== 'content'">
+          <app-site-content-admin />
+        </div>
+
+        <div class="admin-businesses-tab" [hidden]="tab !== 'businesses'">
         <div class="admin-title">
           <div>
             <span class="eyebrow">אזור ניהול</span>
@@ -164,10 +175,7 @@ import { environment } from '../../../environments/environment';
             שליחת דוחות כניסות למייל מופעלת
           </label>
           <p class="hint">המתג שומר את ההעדפה. כדי לשלוח דוח בפועל נדרש להגדיר גם מדידת כניסות, כתובת יעד ושירות מייל מתוזמן בצד השרת.</p>
-          <label class="check">
-            <input type="checkbox" [(ngModel)]="settings.showRecommendationsSection" name="showRecommendationsSection" (change)="saveSiteSettings()">
-            להציג את אזור המלצות הלקוחות באתר
-          </label>
+          <p class="hint">הצגה או הסתרה של אזור "ממליצים על סמן" באתר נעשית בלשונית "עריכת תוכן אתר סמן".</p>
           @if (settingsError) { <p class="form-error">{{settingsError}}</p> }
         </section>
 
@@ -281,7 +289,7 @@ import { environment } from '../../../environments/environment';
 
                 <label>
                   לוגו העסק
-                  <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" (change)="uploadBrandAsset($event, 'logo')">
+                  <input type="file" accept="image/png,image/jpeg,image/webp" (change)="uploadBrandAsset($event, 'logo')">
                 </label>
 
                 @if (editing.logoUrl) {
@@ -290,7 +298,7 @@ import { environment } from '../../../environments/environment';
 
                 <label>
                   Favicon – אייקון ללשונית הדפדפן
-                  <input type="file" accept="image/png,image/x-icon,image/vnd.microsoft.icon,image/svg+xml" (change)="uploadBrandAsset($event, 'favicon')">
+                  <input type="file" accept="image/png" (change)="uploadBrandAsset($event, 'favicon')">
                 </label>
 
                 @if (editing.faviconUrl) {
@@ -305,6 +313,20 @@ import { environment } from '../../../environments/environment';
                 <small class="wide">
                   אפשר להעלות כמה תמונות. התמונות יוצגו בגלריה בעמוד העסק.
                 </small>
+
+                @if (editing.galleryUrls.length) {
+                  <div class="wide gallery-edit">
+                    @for (url of editing.galleryUrls; track $index) {
+                      <figure>
+                        <img [src]="url" alt="תמונה בגלריית העסק">
+                        <figcaption>
+                          <button type="button" class="admin-action" (click)="setCover(url)" [disabled]="editing.imageUrl === url">{{editing.imageUrl === url ? 'תמונת כיסוי' : 'הגדרה ככיסוי'}}</button>
+                          <button type="button" class="admin-action delete-action" (click)="removeGalleryImage($index)">הסרה</button>
+                        </figcaption>
+                      </figure>
+                    }
+                  </div>
+                }
 
                 <label class="wide">
                   תיאור העסק
@@ -341,6 +363,7 @@ import { environment } from '../../../environments/environment';
             </form>
           </section>
         }
+        </div>
       }
     </main>
   </div>
@@ -357,6 +380,7 @@ export class AdminComponent {
   cloudMode = false;
   loggedIn = false;
   localCount = 0;
+  tab: 'businesses' | 'content' = 'businesses';
   settings: SemanSettings = { sendVisitReportEmail: false, showRecommendationsSection: false };
   settingsError = '';
   recommendations: Recommendation[] = [];
@@ -674,11 +698,13 @@ export class AdminComponent {
     if (!file || !this.editing) return;
 
     const allowed = kind === 'logo'
-      ? ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
-      : ['image/png', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/svg+xml'];
+      ? ['image/jpeg', 'image/png', 'image/webp']
+      : ['image/png'];
 
     if (!allowed.includes(file.type) || file.size > 2 * 1024 * 1024) {
-      this.error = 'יש לבחור קובץ תמונה מתאים עד 2MB.';
+      this.error = kind === 'logo'
+        ? 'הלוגו חייב להיות קובץ JPG, PNG או WEBP, עד 2MB.'
+        : 'ה-favicon חייב להיות קובץ PNG, עד 2MB.';
       input.value = '';
       return;
     }
@@ -743,6 +769,15 @@ export class AdminComponent {
       this.busy = false;
       input.value = '';
     }
+  }
+
+  removeGalleryImage(index: number): void {
+    if (!this.editing) return;
+    this.editing.galleryUrls = (this.editing.galleryUrls || []).filter((_, i) => i !== index);
+  }
+
+  setCover(url: string): void {
+    if (this.editing) this.editing.imageUrl = url;
   }
 
   businessUrl(business: Business): string {

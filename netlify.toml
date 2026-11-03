@@ -1,4 +1,19 @@
+# מפת האתר נוצרת דינמית בפונקציית הענן sitemap ומוגשת בכתובת /sitemap.xml של האתר
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "https://bfmheqetjjotocunjoxe.supabase.co/functions/v1/sitemap"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

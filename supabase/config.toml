@@ -1,5 +1,14 @@
+# פונקציות ציבוריות: נקראות מהדפדפן עם מפתח publishable (שאינו JWT),
+# ולכן בדיקת JWT של Supabase חייבת להיות כבויה. כל פונקציה מגינה על עצמה בקוד.
 [functions.send-contact]
 verify_jwt = false
 
 [functions.sitemap]
+verify_jwt = false
+
+[functions.track-visit]
+verify_jwt = false
+
+# נקראת מ-pg_cron ללא JWT; מוגנת בסוד x-report-secret.
+[functions.send-daily-reports]
 verify_jwt = false
