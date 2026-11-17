@@ -150,6 +150,82 @@ export const DEFAULT_CONTENT: SiteContent = {
   }
 };
 
+/**
+ * נוסח אנגלי קבוע לאתר הראשי. עריכות במסך הניהול חלות על העברית בלבד; פרטי הקשר
+ * (טלפון, מייל, WhatsApp וקישורי תחתית) נלקחים מהנתונים שהוזנו בניהול.
+ */
+export const DEFAULT_CONTENT_EN: SiteContent = {
+  header: {
+    tagline: 'Putting your business on the map',
+    navWhy: 'Why Seman', navHow: 'How it works', navExamples: 'Examples',
+    navContact: 'Contact', navRecommendations: 'Recommendations',
+    cta: 'I want a page for my business'
+  },
+  hero: {
+    eyebrow: 'A digital presence for small businesses and freelancers',
+    title: 'Seman!\nWe put your business on the map.',
+    paragraph1: 'At Seman we create a personal, simple and professional web page for small businesses and freelancers, gathering all the important details about the business in one place.',
+    paragraph2: 'No complicated website, no long process and no unnecessary costs. Just one page that lets customers get to know you, find you and get in touch.',
+    primaryButton: 'I want a page for my business',
+    secondaryButton: 'Why Seman?',
+    mapLabel: 'Your business is right here',
+    points: [{ text: 'No technical knowledge' }, { text: 'One link to share' }, { text: 'Mobile friendly' }]
+  },
+  audience: {
+    title: '', description: '',
+    items: [
+      { icon: '✂', title: 'Professionals' }, { icon: '▣', title: 'Shops and businesses' },
+      { icon: '▤', title: 'Freelancers' }, { icon: '♡', title: 'Service providers' }
+    ]
+  },
+  why: {
+    eyebrow: 'Why Seman?',
+    title: 'Your customers are looking for you.',
+    lead: 'We make it easy for them to find all the information about your business. Instead of sending a phone number, address and opening hours again and again, you just send one link.',
+    subheading: 'Everything your customers need, in one place',
+    features: [
+      { icon: '⌂', title: 'Business details', text: 'Business name and a description of your services, so people know exactly what you offer.' },
+      { icon: '☎', title: 'Contact', text: 'Call with one tap, and send a quick WhatsApp message or email.' },
+      { icon: '⌖', title: 'Business location', text: 'A clear address and a navigation link that brings customers all the way to you.' },
+      { icon: '◷', title: 'Opening hours', text: 'Clear days and hours, so people know when to visit or get in touch.' },
+      { icon: '▧', title: 'Product and place photos', text: 'Photos of products, services and the business location, with no photos of people.' },
+      { icon: '◎', title: 'Important links', text: 'A link to the business website and other ways to get in touch.' }
+    ]
+  },
+  how: {
+    eyebrow: 'How does it work?',
+    title: 'Three steps from your business to being found.',
+    lead: '',
+    steps: [
+      { title: 'Tell us about your business', text: 'Send us your business details, product photos and ways to contact you.' },
+      { title: 'We build your page', text: 'We create a personal, organized page for you with all the important information.' },
+      { title: 'Your business gets its place online', text: 'You get a personal link to the page that you can share with customers and anywhere else.' }
+    ]
+  },
+  examples: {
+    eyebrow: 'Examples',
+    title: 'This is what a business page with Seman looks like.',
+    lead: 'A glimpse of sample pages of different kinds of businesses, each with its own details, contact options and location.',
+    emptyText: 'Business pages shown on Seman will appear here soon.',
+    cardLabel: 'Seman business page',
+    cardButton: 'View business page'
+  },
+  contact: {
+    eyebrow: 'Contact', title: "Let's talk!",
+    lead: 'Want to join Seman or hear more details? We would love to hear from you.',
+    phone: environment.ownerPhone, email: environment.ownerEmail, whatsapp: environment.ownerWhatsapp,
+    formTitle: 'Or leave your details', formSubtitle: 'We will get back to you soon',
+    submitButton: 'Send', formNote: 'Your message will be sent directly to the Seman email.',
+    successMessage: 'Your message was sent! We will get back to you soon.'
+  },
+  recommendations: { eyebrow: 'Recommendations for Seman', title: 'What our customers say', intro: '' },
+  footer: {
+    description: 'A personal, simple and professional web page for every small business and freelancer — all the details in one place.',
+    copyright: '© 2026 Seman. All rights reserved.',
+    phone: '', email: '', links: []
+  }
+};
+
 export const SECTION_KEYS: SectionKey[] = ['header', 'hero', 'audience', 'why', 'how', 'examples', 'contact', 'recommendations', 'footer'];
 
 export const DEFAULT_VISIBILITY: SiteVisibility = {

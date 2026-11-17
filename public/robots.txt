@@ -2,5 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-# אחרי שמתחברים לדומיין: להסיר את ה-# ולהחליף בכתובת האתר האמיתית.
+# אחרי שמתחברים לדומיין האמיתי: להחליף את YOUR_DOMAIN ולהסיר את ה-#.
 # Sitemap: https://YOUR_DOMAIN/sitemap.xml

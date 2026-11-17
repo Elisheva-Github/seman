@@ -20,6 +20,7 @@ import {
     @if (!selected) {
       <h2>עריכת תוכן אתר סמן</h2>
       <p>בחרי אזור באתר כדי לערוך את הטקסטים שלו. אפשר גם להסתיר אזור בלי למחוק אותו. שינויים נשמרים בענן ומופיעים באתר בכניסה או ברענון הבא, בלי פריסה מחדש.</p>
+      <p class="hint">שימי לב: העריכות כאן חלות על הנוסח העברי של האתר. הנוסח באנגלית קבוע (טלפון, מייל, WhatsApp וקישורי התחתית משותפים לשתי השפות).</p>
       @if (success) { <div class="notice cms-success" role="status">{{success}}</div> }
       @if (error) { <div class="notice warning" role="alert">{{error}}</div> }
       @if (loading) { <p>טוענת אזורים…</p> }

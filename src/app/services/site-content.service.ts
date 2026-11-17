@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { Lang } from './i18n.service';
 import {
-  DEFAULT_CONTENT, DEFAULT_VISIBILITY, SECTION_KEYS, SiteContent, SiteContentRow, SiteVisibility,
+  DEFAULT_CONTENT, DEFAULT_CONTENT_EN, DEFAULT_VISIBILITY, SECTION_KEYS, SiteContent, SiteContentRow, SiteVisibility,
   SectionKey, mergeSection, sectionDef
 } from '../models/site-content.model';
 
@@ -40,6 +41,17 @@ export class SiteContentService {
       }).finally(() => { this.ready = true; });
     }
     return this.loading;
+  }
+
+  /** התוכן בשפה המבוקשת. באנגלית: הנוסח הקבוע, עם פרטי הקשר והקישורים שהוזנו בניהול. */
+  localized(lang: Lang): SiteContent {
+    if (lang === 'he') return this.content;
+    const he = this.content;
+    return {
+      ...DEFAULT_CONTENT_EN,
+      contact: { ...DEFAULT_CONTENT_EN.contact, phone: he.contact.phone, email: he.contact.email, whatsapp: he.contact.whatsapp },
+      footer: { ...DEFAULT_CONTENT_EN.footer, phone: he.footer.phone, email: he.footer.email, links: he.footer.links }
+    };
   }
 
   // ----- פעולות מנהלת -------------------------------------------------------

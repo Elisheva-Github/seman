@@ -18,4 +18,6 @@ export interface Business {
   showInExamples: boolean;
   sendVisitReportEmail: boolean;
   showRecommendations: boolean;
+  /** שכונה שאליה העסק משויך (מזהה), או מחרוזת ריקה */
+  neighborhoodId: string;
 }

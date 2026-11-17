@@ -6,11 +6,14 @@ import { Business } from '../../models/business.model';
 import { BusinessService, Recommendation, SemanSettings } from '../../services/business.service';
 import { AuthService } from '../../services/auth.service';
 import { SiteContentAdminComponent } from './site-content-admin.component';
+import { NeighborhoodsAdminComponent } from './neighborhoods-admin.component';
+import { NeighborhoodService } from '../../services/neighborhood.service';
+import { Neighborhood } from '../../models/neighborhood.model';
 import { environment } from '../../../environments/environment';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, RouterLink, SiteContentAdminComponent],
+  imports: [FormsModule, RouterLink, SiteContentAdminComponent, NeighborhoodsAdminComponent],
   selector: 'app-admin',
   template: `
   <div class="admin-shell">
@@ -66,13 +69,18 @@ import { environment } from '../../../environments/environment';
         </section>
       } @else {
         <nav class="admin-tabs" aria-label="אזורי ניהול">
-          <button type="button" [class.active]="tab === 'businesses'" (click)="tab = 'businesses'">ניהול עסקים</button>
+          <button type="button" [class.active]="tab === 'businesses'" (click)="showBusinessesTab()">ניהול עסקים</button>
+          <button type="button" [class.active]="tab === 'neighborhoods'" (click)="tab = 'neighborhoods'">שכונות</button>
           <button type="button" [class.active]="tab === 'content'" (click)="tab = 'content'">עריכת תוכן אתר סמן</button>
         </nav>
 
         <div class="admin-content-tab" [hidden]="tab !== 'content'">
           <app-site-content-admin />
         </div>
+
+        @if (tab === 'neighborhoods') {
+          <app-neighborhoods-admin />
+        }
 
         <div class="admin-businesses-tab" [hidden]="tab !== 'businesses'">
         <div class="admin-title">
@@ -248,8 +256,21 @@ import { environment } from '../../../environments/environment';
                 </label>
 
                 <label>
-                  תחום העסק
-                  <input [(ngModel)]="editing.category" name="category">
+                  תחום העסק (קטגוריה)
+                  <input [(ngModel)]="editing.category" name="category" list="category-options" autocomplete="off">
+                  <small>אפשר לבחור קטגוריה קיימת מהרשימה או להקליד קטגוריה חדשה. סינון בדף השכונה נעשה לפי הקטגוריה.</small>
+                  <datalist id="category-options">
+                    @for (category of categories; track category) { <option [value]="category"></option> }
+                  </datalist>
+                </label>
+
+                <label>
+                  שכונה
+                  <select [(ngModel)]="editing.neighborhoodId" name="neighborhoodId">
+                    <option value="">ללא שכונה</option>
+                    @for (neighborhood of neighborhoods; track neighborhood.id) { <option [value]="neighborhood.id">{{neighborhood.name}}{{neighborhood.published ? '' : ' (לא מפורסמת)'}}</option> }
+                  </select>
+                  <small>את השכונות עצמן מוסיפים בלשונית "שכונות".</small>
                 </label>
 
                 <label>
@@ -273,8 +294,8 @@ import { environment } from '../../../environments/environment';
                 </label>
 
                 <label>
-                  שעות פעילות
-                  <input [(ngModel)]="editing.hours" name="hours">
+                  שעות פעילות (Enter לירידת שורה בין הימים)
+                  <textarea [(ngModel)]="editing.hours" name="hours" rows="3" placeholder="א׳–ה׳ 09:00–18:00&#10;ו׳ 09:00–13:00"></textarea>
                 </label>
 
                 <label>
@@ -380,7 +401,8 @@ export class AdminComponent {
   cloudMode = false;
   loggedIn = false;
   localCount = 0;
-  tab: 'businesses' | 'content' = 'businesses';
+  tab: 'businesses' | 'neighborhoods' | 'content' = 'businesses';
+  neighborhoods: Neighborhood[] = [];
   settings: SemanSettings = { sendVisitReportEmail: false, showRecommendationsSection: false };
   settingsError = '';
   recommendations: Recommendation[] = [];
@@ -389,7 +411,8 @@ export class AdminComponent {
 
   constructor(
     private service: BusinessService,
-    private auth: AuthService
+    private auth: AuthService,
+    private neighborhoodService: NeighborhoodService
   ) {
     this.cloudMode = this.service.isCloudMode();
     this.localCount = this.service.getLocalCount();
@@ -433,6 +456,22 @@ export class AdminComponent {
     } finally {
       this.loading = false;
     }
+    void this.loadNeighborhoods();
+  }
+
+  /** רשימת השכונות לבחירה בטופס העסק. כשל כאן (למשל המיגרציה עוד לא הורצה) לא חוסם את ניהול העסקים. */
+  async loadNeighborhoods(): Promise<void> {
+    try { this.neighborhoods = await this.neighborhoodService.getAll(); }
+    catch { this.neighborhoods = []; }
+  }
+
+  showBusinessesTab(): void {
+    this.tab = 'businesses';
+    void this.loadNeighborhoods();
+  }
+
+  get categories(): string[] {
+    return Array.from(new Set(this.businesses.map(b => (b.category || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'he'));
   }
 
   newBusiness(): void {
@@ -456,7 +495,8 @@ export class AdminComponent {
       published: true,
       showInExamples: true,
       sendVisitReportEmail: false,
-      showRecommendations: true
+      showRecommendations: true,
+      neighborhoodId: ''
     };
   }
 

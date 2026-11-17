@@ -4,9 +4,9 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 const DEMO_BUSINESSES: Business[] = [
-  { id: 'demo-1', slug: 'miri-paot', name: 'מירי פאות', category: 'עיצוב פאות ומטפחות', description: 'מבחר פאות ומטפחות בהתאמה אישית, עם יחס אישי ומקצועי.', phone: '052-0000001', email: 'miri@example.com', website: '', address: 'נווה יעקב, ירושלים', hours: 'א׳–ה׳ בתיאום מראש', imageUrl: '', logoUrl: '', faviconUrl: '', galleryUrls: [], whatsapp: '972520000001', published: true, showInExamples: true, sendVisitReportEmail: false, showRecommendations: true },
-  { id: 'demo-2', slug: 'esti-cosmetics', name: 'אסתי קוסמטיקה', category: 'טיפולי פנים וקוסמטיקה', description: 'טיפולי קוסמטיקה באווירה נעימה ומקצועית.', phone: '052-0000002', email: 'esti@example.com', website: '', address: 'פסגת זאב, ירושלים', hours: 'א׳–ה׳ 09:00–18:00', imageUrl: '', logoUrl: '', faviconUrl: '', galleryUrls: [], whatsapp: '972520000002', published: true, showInExamples: true, sendVisitReportEmail: false, showRecommendations: true },
-  { id: 'demo-3', slug: 'a-cohen', name: 'שיפוצים א. כהן', category: 'שיפוץ ותיקונים', description: 'עבודות שיפוץ, תיקונים ותחזוקה לבית ולעסק.', phone: '052-0000003', email: 'cohen@example.com', website: '', address: 'חיפה', hours: 'א׳–ה׳ 08:00–17:00', imageUrl: '', logoUrl: '', faviconUrl: '', galleryUrls: [], whatsapp: '972520000003', published: true, showInExamples: true, sendVisitReportEmail: false, showRecommendations: true }
+  { id: 'demo-1', slug: 'miri-paot', name: 'מירי פאות', category: 'עיצוב פאות ומטפחות', description: 'מבחר פאות ומטפחות בהתאמה אישית, עם יחס אישי ומקצועי.', phone: '052-0000001', email: 'miri@example.com', website: '', address: 'נווה יעקב, ירושלים', hours: 'א׳–ה׳ בתיאום מראש', imageUrl: '', logoUrl: '', faviconUrl: '', galleryUrls: [], whatsapp: '972520000001', published: true, showInExamples: true, sendVisitReportEmail: false, showRecommendations: true, neighborhoodId: '' },
+  { id: 'demo-2', slug: 'esti-cosmetics', name: 'אסתי קוסמטיקה', category: 'טיפולי פנים וקוסמטיקה', description: 'טיפולי קוסמטיקה באווירה נעימה ומקצועית.', phone: '052-0000002', email: 'esti@example.com', website: '', address: 'פסגת זאב, ירושלים', hours: 'א׳–ה׳ 09:00–18:00', imageUrl: '', logoUrl: '', faviconUrl: '', galleryUrls: [], whatsapp: '972520000002', published: true, showInExamples: true, sendVisitReportEmail: false, showRecommendations: true, neighborhoodId: '' },
+  { id: 'demo-3', slug: 'a-cohen', name: 'שיפוצים א. כהן', category: 'שיפוץ ותיקונים', description: 'עבודות שיפוץ, תיקונים ותחזוקה לבית ולעסק.', phone: '052-0000003', email: 'cohen@example.com', website: '', address: 'חיפה', hours: 'א׳–ה׳ 08:00–17:00', imageUrl: '', logoUrl: '', faviconUrl: '', galleryUrls: [], whatsapp: '972520000003', published: true, showInExamples: true, sendVisitReportEmail: false, showRecommendations: true, neighborhoodId: '' }
 ];
 
 
@@ -50,6 +50,13 @@ export class BusinessService {
   async getExamples(): Promise<Business[]> {
     if (!this.configured) return this.getLocal().filter(b => b.published && b.showInExamples);
     const rows = await this.request<any[]>('/rest/v1/businesses?select=*&published=eq.true&show_in_examples=eq.true&order=created_at.desc');
+    return rows.map(row => this.fromRow(row));
+  }
+
+  /** כל העסקים המפורסמים של שכונה (לדף השכונה). */
+  async getByNeighborhood(neighborhoodId: string): Promise<Business[]> {
+    if (!this.configured) return this.getLocal().filter(b => b.published && b.neighborhoodId === neighborhoodId);
+    const rows = await this.request<any[]>(`/rest/v1/businesses?select=*&published=eq.true&neighborhood_id=eq.${encodeURIComponent(neighborhoodId)}&order=name.asc`);
     return rows.map(row => this.fromRow(row));
   }
 
@@ -188,7 +195,7 @@ export class BusinessService {
   private getLocal(): Business[] {
     try {
       const saved = localStorage.getItem(this.storageKey);
-      if (saved) return (JSON.parse(saved) as Business[]).map(b => ({ ...b, showInExamples: b.showInExamples ?? true, sendVisitReportEmail: b.sendVisitReportEmail ?? false, showRecommendations: b.showRecommendations ?? true }));
+      if (saved) return (JSON.parse(saved) as Business[]).map(b => ({ ...b, showInExamples: b.showInExamples ?? true, sendVisitReportEmail: b.sendVisitReportEmail ?? false, showRecommendations: b.showRecommendations ?? true, neighborhoodId: b.neighborhoodId ?? '' }));
       localStorage.setItem(this.storageKey, JSON.stringify(DEMO_BUSINESSES));
       return [...DEMO_BUSINESSES];
     } catch { return [...DEMO_BUSINESSES]; }
@@ -224,11 +231,11 @@ export class BusinessService {
   }
 
   private fromRow(row: any): Business {
-    return { id: row.id, slug: row.slug, name: row.name, category: row.category || '', description: row.description || '', phone: row.phone || '', email: row.email || '', website: row.website || '', address: row.address || '', hours: row.hours || '', imageUrl: row.image_url || '', logoUrl: row.logo_url || '', faviconUrl: row.favicon_url || '', galleryUrls: row.gallery_urls || [], whatsapp: row.whatsapp || '', published: !!row.published, showInExamples: !!row.show_in_examples, sendVisitReportEmail: !!row.send_visit_report_email, showRecommendations: row.show_recommendations !== false };
+    return { id: row.id, slug: row.slug, name: row.name, category: row.category || '', description: row.description || '', phone: row.phone || '', email: row.email || '', website: row.website || '', address: row.address || '', hours: row.hours || '', imageUrl: row.image_url || '', logoUrl: row.logo_url || '', faviconUrl: row.favicon_url || '', galleryUrls: row.gallery_urls || [], whatsapp: row.whatsapp || '', published: !!row.published, showInExamples: !!row.show_in_examples, sendVisitReportEmail: !!row.send_visit_report_email, showRecommendations: row.show_recommendations !== false, neighborhoodId: row.neighborhood_id || '' };
   }
 
   private toRow(b: Business): Record<string, unknown> {
-    const row: Record<string, unknown> = { slug: b.slug, name: b.name, category: b.category, description: b.description, phone: b.phone, email: b.email, website: b.website, address: b.address, hours: b.hours, image_url: b.imageUrl, logo_url: b.logoUrl || '', favicon_url: b.faviconUrl || '', gallery_urls: b.galleryUrls || [], whatsapp: b.whatsapp, published: b.published, show_in_examples: b.showInExamples, send_visit_report_email: b.sendVisitReportEmail, show_recommendations: b.showRecommendations };
+    const row: Record<string, unknown> = { slug: b.slug, name: b.name, category: b.category, description: b.description, phone: b.phone, email: b.email, website: b.website, address: b.address, hours: b.hours, image_url: b.imageUrl, logo_url: b.logoUrl || '', favicon_url: b.faviconUrl || '', gallery_urls: b.galleryUrls || [], whatsapp: b.whatsapp, published: b.published, show_in_examples: b.showInExamples, send_visit_report_email: b.sendVisitReportEmail, show_recommendations: b.showRecommendations, neighborhood_id: b.neighborhoodId && !b.neighborhoodId.startsWith('local-') ? b.neighborhoodId : null };
     if (b.id && !b.id.startsWith('local-')) row['id'] = b.id;
     return row;
   }

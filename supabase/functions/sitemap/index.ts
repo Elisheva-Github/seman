@@ -13,8 +13,15 @@ Deno.serve(async () => {
   });
   if (!response.ok) return new Response('Could not load published pages', { status: 502 });
   const businesses = await response.json();
+  // דפי שכונות מפורסמים (אם הטבלה עדיין לא קיימת, פשוט מדלגים)
+  let neighborhoods: { slug: string }[] = [];
+  try {
+    const nbResponse = await fetch(`${supabaseUrl}/rest/v1/neighborhoods?select=slug&published=eq.true`, { headers: { apikey: anonKey } });
+    if (nbResponse.ok) neighborhoods = await nbResponse.json();
+  } catch { /* לא קריטי */ }
   const entries = [
     `<url><loc>${xmlEscape(siteUrl)}</loc></url>`,
+    ...neighborhoods.map((n) => `<url><loc>${xmlEscape(`${siteUrl}/n/${encodeURIComponent(n.slug)}`)}</loc></url>`),
     ...businesses.map((business: { slug: string; updated_at?: string }) =>
       `<url><loc>${xmlEscape(`${siteUrl}/biz/${encodeURIComponent(business.slug)}`)}</loc>${business.updated_at ? `<lastmod>${new Date(business.updated_at).toISOString()}</lastmod>` : ''}</url>`
     ),

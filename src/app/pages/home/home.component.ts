@@ -4,19 +4,22 @@ import { BusinessService, Recommendation } from '../../services/business.service
 import { Business } from '../../models/business.model';
 import { environment } from '../../../environments/environment';
 import { SiteContentService } from '../../services/site-content.service';
+import { I18nService } from '../../services/i18n.service';
+import { LangSwitchComponent } from '../../shared/lang-switch.component';
 import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site-content.model';
 
 @Component({
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LangSwitchComponent],
   selector: 'app-home',
   template: `
   @if (!site.ready) {
     <main class="content-loading" role="status" aria-busy="true" aria-label="טוענת את האתר"><span class="pin-mark" aria-hidden="true"></span></main>
   } @else {
+  <a class="skip-link" href="#main-content" (click)="skipToContent($event)">{{i18n.t('skipToContent')}}</a>
   <header class="site-header">
     <a class="brand brand-with-tagline" routerLink="/"><span class="pin-mark"></span><span>סמן@if (c.header.tagline) { <small>{{c.header.tagline}}</small> }</span></a>
-    <nav aria-label="ניווט ראשי">
+    <nav [attr.aria-label]="i18n.t('homeNavLabel')">
       @if (v.why && c.header.navWhy) { <a href="#why">{{c.header.navWhy}}</a> }
       @if (v.how && c.header.navHow) { <a href="#how">{{c.header.navHow}}</a> }
       @if (v.examples && c.header.navExamples) { <a href="#examples">{{c.header.navExamples}}</a> }
@@ -24,9 +27,10 @@ import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site
       @if (showRecommendationsSection && recommendations.length && c.header.navRecommendations) { <a href="#recommendations">{{c.header.navRecommendations}}</a> }
     </nav>
     @if (v.contact && c.header.cta) { <a class="button small" href="#contact">{{c.header.cta}}</a> }
+    <app-lang-switch />
   </header>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <section id="top" class="hero">
       <div class="hero-content">
         @if (c.hero.eyebrow) { <span class="eyebrow">{{c.hero.eyebrow}}</span> }
@@ -36,7 +40,7 @@ import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site
         @if (v.audience && c.audience.items.length) {
           @if (c.audience.title) { <h2 class="audience-title">{{c.audience.title}}</h2> }
           @if (c.audience.description) { <p class="audience-description pre-line">{{c.audience.description}}</p> }
-          <div class="audience-icons" [attr.aria-label]="c.audience.title || 'למי סמן מיועד'">
+          <div class="audience-icons" [attr.aria-label]="c.audience.title || i18n.t('homeAudienceLabel')">
             @for (item of c.audience.items; track $index) {
               <div>@if (item.icon) { <span aria-hidden="true">{{item.icon}}</span> }<b>{{item.title}}</b></div>
             }
@@ -95,7 +99,7 @@ import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site
           @for (business of businesses; track business.id) {
             <article class="business-card">
               <div class="business-image" [style.backgroundImage]="cssUrl(business.imageUrl)">
-                @if (business.logoUrl) { <img class="business-card-logo" [src]="business.logoUrl" [alt]="'הלוגו של ' + business.name"> }
+                @if (business.logoUrl) { <img class="business-card-logo" [src]="business.logoUrl" [alt]="i18n.t('logoOf', {name: business.name})"> }
                 @if (!business.imageUrl) { <span class="pin-mark card-pin"></span> }
                 @if (c.examples.cardLabel) { <span class="business-image-label">{{c.examples.cardLabel}}</span> }
               </div>
@@ -103,7 +107,7 @@ import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site
                 <h3>{{ business.name }}</h3>
                 <p>{{ business.category }}@if (business.address) { · {{ business.address }} }</p>
                 <a class="card-button" [routerLink]="['/biz', business.slug]">
-                  <span>{{c.examples.cardButton || 'לצפייה בעמוד העסק'}}</span><span class="card-button-arrow" aria-hidden="true">←</span>
+                  <span>{{c.examples.cardButton || i18n.t('homeBizOf')}}</span><span class="card-button-arrow" aria-hidden="true">←</span>
                 </a>
               </div>
             </article>
@@ -122,38 +126,38 @@ import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site
         <div class="seman-contact-cards">
           @if (contactPhoneHref) {
             <a class="seman-contact-card phone-card" [href]="contactPhoneHref">
-              <span class="seman-contact-icon" aria-hidden="true">☎</span><strong>טלפון</strong>
-              <b dir="ltr">{{c.contact.phone}}</b><small>לחיוג ישיר</small>
+              <span class="seman-contact-icon" aria-hidden="true">☎</span><strong>{{i18n.t('homePhone')}}</strong>
+              <b dir="ltr">{{c.contact.phone}}</b><small>{{i18n.t('homePhoneHint')}}</small>
             </a>
           }
           @if (c.contact.email) {
             <a class="seman-contact-card email-card" [href]="'mailto:' + c.contact.email">
-              <span class="seman-contact-icon" aria-hidden="true">✉</span><strong>דוא״ל</strong>
-              <b class="contact-email" dir="ltr">{{c.contact.email}}</b><small>כתבו לנו</small>
+              <span class="seman-contact-icon" aria-hidden="true">✉</span><strong>{{i18n.t('homeEmail')}}</strong>
+              <b class="contact-email" dir="ltr">{{c.contact.email}}</b><small>{{i18n.t('homeEmailHint')}}</small>
             </a>
           }
           @if (hasOwnerWhatsapp) {
             <a class="seman-contact-card whatsapp-card" [href]="ownerWhatsappUrl" target="_blank" rel="noopener">
               <span class="seman-contact-icon" aria-hidden="true">◉</span><strong>WhatsApp</strong>
-              <b dir="ltr">{{ownerWhatsapp}}</b><small class="whatsapp-status active">● זמין לפנייה – מספר הוגדר</small>
+              <b dir="ltr">{{ownerWhatsapp}}</b><small class="whatsapp-status active">{{i18n.t('homeWaOk')}}</small>
             </a>
           } @else {
             <div class="seman-contact-card whatsapp-card whatsapp-inactive">
               <span class="seman-contact-icon" aria-hidden="true">◉</span><strong>WhatsApp</strong>
-              <small class="whatsapp-status inactive">● לא זמין – לא הוגדר מספר</small>
+              <small class="whatsapp-status inactive">{{i18n.t('homeWaNo')}}</small>
             </div>
           }
         </div>
         <div class="seman-contact-form-wrap">
           <div class="seman-form-intro"><span class="seman-form-icon">✎</span>@if (c.contact.formTitle) { <h3>{{c.contact.formTitle}}</h3> }@if (c.contact.formSubtitle) { <p>{{c.contact.formSubtitle}}</p> }</div>
           <form class="seman-contact-form" (submit)="sendContact($event)">
-            <label class="honeypot" aria-hidden="true">לא למילוי<input name="company_website" tabindex="-1" autocomplete="off"></label>
-            <label>שם מלא<input required name="name" maxlength="120" placeholder="איך קוראים לכם?"></label>
-            <label>שם העסק<input name="business" maxlength="120" placeholder="שם העסק"></label>
-            <label>טלפון לחזרה<input name="phone" type="tel" maxlength="50" placeholder="052-1234567"></label>
-            <label>כתובת דוא״ל<input required type="email" name="email" maxlength="200" placeholder="you@example.com"></label>
-            <label class="full-field">ספרו לנו קצת על העסק<textarea name="message" rows="3" maxlength="3000" placeholder="במה נוכל לעזור?"></textarea></label>
-            <button class="button seman-submit" type="submit" [disabled]="sending">{{sending ? 'שולחת…' : (c.contact.submitButton || 'שליחת פרטים')}}</button>
+            <label class="honeypot" aria-hidden="true">{{i18n.t('notToFill')}}<input name="company_website" tabindex="-1" autocomplete="off"></label>
+            <label>{{i18n.t('fullName')}}<input required name="name" maxlength="120" autocomplete="name" [placeholder]="i18n.t('homeFormNamePh')"></label>
+            <label>{{i18n.t('homeBusinessName')}}<input name="business" maxlength="120" [placeholder]="i18n.t('homeBusinessNamePh')"></label>
+            <label>{{i18n.t('homePhoneBack')}}<input name="phone" type="tel" maxlength="50" autocomplete="tel" placeholder="052-1234567"></label>
+            <label>{{i18n.t('emailLabel')}}<input required type="email" name="email" maxlength="200" autocomplete="email" placeholder="you@example.com"></label>
+            <label class="full-field">{{i18n.t('homeAbout')}}<textarea name="message" rows="3" maxlength="3000" [placeholder]="i18n.t('homeAboutPh')"></textarea></label>
+            <button class="button seman-submit" type="submit" [disabled]="sending">{{sending ? i18n.t('sending') : (c.contact.submitButton || i18n.t('submit'))}}</button>
             @if (formMessage) { <p class="form-feedback" [class.form-error]="formError" role="status">{{formMessage}}</p> }
             @if (c.contact.formNote) { <small>{{c.contact.formNote}}</small> }
           </form>
@@ -190,7 +194,7 @@ import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site
         </p>
       }
       @if (footerLinks.length) {
-        <nav class="footer-links" aria-label="קישורים בתחתית האתר">
+        <nav class="footer-links" [attr.aria-label]="i18n.t('homeFooterLinks')">
           @for (link of footerLinks; track $index) {
             @if (link.external) { <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{link.label}}</a> }
             @else { <a [href]="link.url">{{link.label}}</a> }
@@ -198,6 +202,7 @@ import { SiteContent, SiteVisibility, safeUrl, telHref } from '../../models/site
         </nav>
       }
       @if (c.footer.copyright) { <p>{{c.footer.copyright}}</p> }
+      <p class="footer-a11y"><a routerLink="/accessibility">{{i18n.t('a11yStatement')}}</a></p>
     </footer>
   }
   }
@@ -224,14 +229,15 @@ export class HomeComponent {
   get hasOwnerWhatsapp(): boolean { return /^\d{8,15}$/.test(this.ownerWhatsapp); }
   get ownerWhatsappUrl(): string { return `https://wa.me/${this.ownerWhatsapp}?text=${encodeURIComponent('שלום, הגעתי דרך אתר סמן')}`; }
 
-  constructor(private businessService: BusinessService, public site: SiteContentService) {
+  constructor(private businessService: BusinessService, public site: SiteContentService, public i18n: I18nService) {
     this.applyContent();
+    this.i18n.onChange(() => this.applyContent());
     void this.site.load().then(() => this.applyContent());
     void this.loadBusinesses();
   }
 
   private applyContent(): void {
-    this.c = this.site.content;
+    this.c = this.site.localized(this.i18n.lang);
     this.v = this.site.visibility;
     // השורה הראשונה של הכותרת הראשית מסתיימת לעיתים בסימן קריאה שמוצג בצבע המותג
     this.heroLines = this.c.hero.title.split('\n').map(line => {
@@ -245,6 +251,13 @@ export class HomeComponent {
       .map(link => ({ label: link.label, url: safeUrl(link.url) }))
       .filter(link => link.label && link.url)
       .map(link => ({ ...link, external: /^https?:\/\//i.test(link.url) }));
+  }
+
+  skipToContent(event: Event): void {
+    event.preventDefault();
+    const main = document.getElementById('main-content');
+    main?.focus();
+    main?.scrollIntoView({ behavior: 'auto', block: 'start' });
   }
 
   /** כתובת תמונה בטוחה לשימוש ב-CSS background-image (מונעת הזרקת CSS דרך כתובת עם סוגריים/מירכאות) */
@@ -261,7 +274,7 @@ export class HomeComponent {
     } catch (error) {
       console.error('Failed to load Seman homepage businesses', error);
       this.businesses = [];
-      this.businessesError = 'לא הצלחנו לטעון כרגע את העסקים. כדאי לרענן את העמוד בעוד רגע.';
+      this.businessesError = this.i18n.t('homeBizLoadFail');
     }
 
     try {
@@ -293,13 +306,13 @@ export class HomeComponent {
       });
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
-        throw new Error(result.error || 'לא הצלחנו לשלוח את הפנייה. נסי שוב מאוחר יותר.');
+        throw new Error(this.i18n.isEnglish ? this.i18n.t('sendFail') : (result.error || this.i18n.t('sendFail')));
       }
-      this.formMessage = this.c.contact.successMessage || 'הפנייה נשלחה בהצלחה!';
+      this.formMessage = this.c.contact.successMessage || this.i18n.t('bizSentOk');
       form.reset();
     } catch (error) {
       this.formError = true;
-      this.formMessage = error instanceof Error && error.message.includes('Failed to fetch') ? 'שליחת המייל עדיין לא הוגדרה. יש להשלים את חיבור שירות המייל בענן.' : (error instanceof Error ? error.message : 'אירעה שגיאה בשליחת הפנייה.');
+      this.formMessage = error instanceof Error && error.message.includes('Failed to fetch') ? this.i18n.t('homeSendFail') : (error instanceof Error ? error.message : this.i18n.t('homeGenericFail'));
     } finally { this.sending = false; }
   }
 }

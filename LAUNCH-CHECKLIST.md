@@ -2,7 +2,7 @@
 
 ## חובה לפני שמעלים לאוויר
 1. `npm ci` ואז `npm run build`. **לא הצלחתי להריץ build בסביבת הבדיקה (אין שם רשת להתקנת Angular)**, ולכן יש להריץ אצלך. אם יש שגיאה, שלחי לי אותה ואתקן.
-2. ב-Supabase SQL Editor, בסדר הזה, אם עוד לא הורצו: `202611010001_initial_schema.sql`, `202611020001_admin_features.sql`, `202611030001_business_controls_and_visits.sql`, **`202611040001_site_content.sql` (חדש)**.
+2. ב-Supabase SQL Editor, בסדר הזה, אם עוד לא הורצו: `202611010001_initial_schema.sql`, `202611020001_admin_features.sql`, `202611030001_business_controls_and_visits.sql`, `202611040001_site_content.sql`, **`202611050001_neighborhoods.sql` (חדש: שכונות)**.
 3. לפרוס מחדש את ארבע הפונקציות (`send-contact`, `track-visit`, `send-daily-reports`, `sitemap`) ולוודא ש-Verify JWT כבוי בהן. ללא זה מדידת הכניסות והדוחות לא יעבדו. ראי SETUP-CLOUD.md סעיף 9.
 4. סודות בפונקציות: `RESEND_API_KEY`, `MAIL_FROM` (שולח מאומת ב-Resend), `OWNER_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY`, `DAILY_REPORT_SECRET`, `SITE_URL`; מומלץ גם `ALLOWED_ORIGIN`.
 5. ב-Supabase → Authentication: **לכבות הרשמה של משתמשים חדשים** (Sign ups), ולהשאיר משתמש מנהלת יחיד. הרשאות הניהול נקבעות לפי כתובת המייל `elisheva92121@gmail.com` בכל מדיניות ה-RLS, ולכן חשוב לוודא שזו הכתובת המדויקת (ב-ADMIN-SETUP-NOTE.md צוין חשד לשגיאת הקלדה בכתובת). אם מחליפים כתובת, יש לעדכן אותה בכל המדיניות וב-`environment*.ts`.
@@ -21,3 +21,12 @@
 - ספירת הכניסות היא ספירת טעינות עמוד (עם מניעת כפילות של IP לחצי שעה), לא מבקרים ייחודיים.
 - ניהול עצמי של עסקים (כל עסק נכנס לחשבון משלו ומנהל את התוכן שלו) **עדיין לא קיים**. כרגע רק מנהלת סמן נכנסת למערכת ומנהלת את כל העסקים. זה שלב נפרד שדורש הרשמה והרשאות לכל עסק.
 - שינויי תוכן שנערכו נראים באתר בכל טעינה חדשה. דף שכבר פתוח אצל מבקר יתעדכן ברענון. בנוסף, הדפדפן שומר עותק של התוכן האחרון כדי לטעון מהר, ומתעדכן ברקע.
+
+## Google Search Console (חיפוש בגוגל)
+1. נכנסים ל-https://search.google.com/search-console ומוסיפים נכס מסוג "קידומת כתובת" עם הדומיין האמיתי.
+2. האימות: קובץ `public/google1168f7d8383e1b2e.html` כבר בפרויקט – חייב להיות נגיש בכתובת `https://הדומיין/google1168f7d8383e1b2e.html`, ואז לוחצים "אמת".
+3. ב-`public/robots.txt` מחליפים YOUR_DOMAIN בדומיין האמיתי ומסירים את ה-# משורת Sitemap.
+4. פונקציית ה-sitemap (`supabase/functions/sitemap`) דורשת משתנה סביבה SITE_URL (הדומיין). אחרי הפריסה מגדירים בדומיין הפניה (rewrite) מ-`/sitemap.xml` לכתובת הפונקציה, או מעלים sitemap.xml סטטי.
+5. ב-Search Console: Sitemaps ← מזינים `sitemap.xml` ← שליחה.
+6. לבדוק עמוד עסק אחד בכלי "בדיקת כתובת אתר" ← "בקשת אינדוקס".
+7. לבדוק את הנתונים המובנים בכלי Rich Results Test של גוגל על כתובת של עסק.
